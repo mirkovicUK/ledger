@@ -49,13 +49,10 @@ describe('periodEnd', () => {
   });
 
   test('throws for unknown period', () => {
-    expect(() => periodEnd(refDate, 'quarterly')).toThrow(/unknown period/i);
+    expect(() => periodEnd(refDate, 'quarterly' as any)).toThrow(/unknown period/i);
   });
 });
 
 // ---------------------------------------------------------------------------
 // periodStart / periodEnd consistency
 // ---------------------------------------------------------------------------
-
-
-```
