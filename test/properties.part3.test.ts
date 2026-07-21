@@ -41,14 +41,7 @@ describe('Property 8: Filter results satisfy all applied criteria', () => {
     return `2024-${p8Pad(month)}-${p8Pad(day)}`;
   }
 
-  function p8GenerateTransactions(): Array<{
-    id: string;
-    accountId: string;
-    categoryId: string | null;
-    date: string;
-    amount: number;
-    description: string;
-  }> {
+  function p8GenerateTransactions() {
     const count = p8RandInt(5, 25);
     return Array.from({ length: count }, (_, i) => ({
       id: `tx-p8-${i}`,
@@ -60,13 +53,13 @@ describe('Property 8: Filter results satisfy all applied criteria', () => {
     }));
   }
 
-  function p8GenerateCriteria(): {
-    accountId: string | null;
-    categoryId: string | null;
-    dateRange: { from: string; to: string } | null;
-    amountRange: { min: number; max: number } | null;
-  } {
-    const criteria = {
+  function p8GenerateCriteria() {
+    const criteria: {
+      accountId: string | null;
+      categoryId: string | null;
+      dateRange: { from: string; to: string } | null;
+      amountRange: { min: number; max: number } | null;
+    } = {
       accountId: null,
       categoryId: null,
       dateRange: null,
@@ -162,3 +155,6 @@ describe('Property 8: Filter results satisfy all applied criteria', () => {
 // Property 9: Sort results are correctly ordered
 // Validates: Requirements 6.2
 // ---------------------------------------------------------------------------
+
+
+```
