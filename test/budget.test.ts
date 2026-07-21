@@ -1,13 +1,14 @@
-import { computeBudgetSpending, isOverspent, progressRatio } from '../src/lib/budget.js';
 import { describe, test, expect } from 'vitest';
+import { computeBudgetSpending, isOverspent, progressRatio } from '../src/lib/budget.js';
+import type { Budget, Transaction } from '../src/lib/types.js';
 
 // Helper to build a minimal transaction object
-function makeTx(categoryId: string | null, date: string, amount: number) {
-  return { categoryId, date, amount };
+function makeTx(categoryId: string | null | undefined, date: string, amount: number): Pick<Transaction, 'categoryId' | 'date' | 'amount'> {
+  return { categoryId: categoryId ?? null, date, amount };
 }
 
 // A budget that tracks category 'cat-food' on a monthly period
-const foodBudget = { categoryId: 'cat-food', period: 'monthly', limit: 300 };
+const foodBudget: Pick<Budget, 'categoryId' | 'period'> = { categoryId: 'cat-food', period: 'monthly' };
 
 // Reference date sitting in mid-month
 const REF = '2024-03-15';
@@ -74,7 +75,7 @@ describe('computeBudgetSpending', () => {
 
   test('works with weekly period', () => {
     // REF is 2024-03-15 (Friday). startOfWeek is Sunday 2024-03-10, endOfWeek is Saturday 2024-03-16.
-    const weeklyBudget = { categoryId: 'cat-food', period: 'weekly', limit: 100 };
+    const weeklyBudget: Pick<Budget, 'categoryId' | 'period'> = { categoryId: 'cat-food', period: 'weekly' };
     const txs = [
       makeTx('cat-food', '2024-03-10', 10), // Sunday — in week
       makeTx('cat-food', '2024-03-15', 20), // Friday — in week
@@ -84,7 +85,7 @@ describe('computeBudgetSpending', () => {
   });
 
   test('works with yearly period', () => {
-    const yearlyBudget = { categoryId: 'cat-food', period: 'yearly', limit: 5000 };
+    const yearlyBudget: Pick<Budget, 'categoryId' | 'period'> = { categoryId: 'cat-food', period: 'yearly' };
     const txs = [
       makeTx('cat-food', '2024-01-01', 100),
       makeTx('cat-food', '2024-12-31', 200),
