@@ -1,9 +1,23 @@
+export interface DateRange {
+  from: string;
+  to: string;
+}
+
+export interface AmountRange {
+  min: number;
+  max: number;
+}
+
+export interface FilterCriteria {
+  accountId?: string | null;
+  categoryId?: string | null;
+  dateRange?: DateRange | null;
+  amountRange?: AmountRange | null;
+}
+
 /**
  * Apply all non-null filter criteria using AND logic.
  * Returns filtered array of transactions.
- * @param {Array} transactions
- * @param {FilterCriteria} criteria
- * @returns {Array}
  */
 export function applyFilters<T extends { accountId?: string; categoryId?: string | null; date?: string; amount?: number }>(
   transactions: T[],
@@ -29,35 +43,20 @@ export function applyFilters<T extends { accountId?: string; categoryId?: string
 
     // dateRange: string comparison works for YYYY-MM-DD
     if (dateRange != null) {
-      if (t.date < dateRange.from || t.date > dateRange.to) {
+      const tDate = t.date ?? '';
+      if (tDate < dateRange.from || tDate > dateRange.to) {
         return false;
       }
     }
 
     // amountRange: numeric comparison
     if (amountRange != null) {
-      if (t.amount < amountRange.min || t.amount > amountRange.max) {
+      const tAmount = t.amount ?? 0;
+      if (tAmount < amountRange.min || tAmount > amountRange.max) {
         return false;
       }
     }
 
     return true;
   });
-}
-
-export interface DateRange {
-  from: string;
-  to: string;
-}
-
-export interface AmountRange {
-  min: number;
-  max: number;
-}
-
-export interface FilterCriteria {
-  accountId?: string | null;
-  categoryId?: string | null;
-  dateRange?: DateRange | null;
-  amountRange?: AmountRange | null;
 }
