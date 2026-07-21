@@ -34,20 +34,20 @@ describe('Property 10: Export/import roundtrip preserves all data', () => {
     };
   }
 
-  function pick<T>(rng: () => number, arr: T[]): T {
+  function pick<T>(rng: () => number, arr: T[]) {
     return arr[Math.floor(rng() * arr.length)];
   }
 
-  function randInt(rng: () => number, min: number, max: number): number {
+  function randInt(rng: () => number, min: number, max: number) {
     return Math.floor(rng() * (max - min + 1)) + min;
   }
 
-  function pad(n: number): string {
+  function pad(n: number) {
     return String(n).padStart(2, '0');
   }
 
   /** Generate a YYYY-MM-DD string within 2020-2024. */
-  function randomDate(rng: () => number): string {
+  function randomDate(rng: () => number) {
     const year = 2020 + randInt(rng, 0, 4);
     const month = randInt(rng, 1, 12);
     const day = randInt(rng, 1, 28);
@@ -55,17 +55,17 @@ describe('Property 10: Export/import roundtrip preserves all data', () => {
   }
 
   /** Generate a valid ISO datetime string. */
-  function randomDatetime(rng: () => number): string {
+  function randomDatetime(rng: () => number) {
     return `${randomDate(rng)}T${pad(randInt(rng, 0, 23))}:${pad(randInt(rng, 0, 59))}:${pad(randInt(rng, 0, 59))}.000Z`;
   }
 
   /** Generate a finite non-NaN amount in [-9999, 9999], 2 decimal places. */
-  function randomAmount(rng: () => number): number {
+  function randomAmount(rng: () => number) {
     return Math.round((rng() * 19998 - 9999) * 100) / 100;
   }
 
   /** Generate a random alphanumeric string of given length. */
-  function randomString(rng: () => number, len: number, prefix: string = ''): string {
+  function randomString(rng: () => number, len: number, prefix: string = '') {
     const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
     let s = prefix;
     for (let i = 0; i < len; i++) {
@@ -191,3 +191,6 @@ describe('Property 10: Export/import roundtrip preserves all data', () => {
 // Property 12: Referential integrity for account references
 // Validates: Requirements 10.5
 // ---------------------------------------------------------------------------
+
+
+```
