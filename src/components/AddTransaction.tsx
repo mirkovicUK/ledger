@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Account, Category, Transaction } from '../lib/types.js';
 import { TransactionSchema } from '../lib/types.js';
-import { CategoryPicker } from './CategoryPicker';
+import { CategoryPicker } from './CategoryPicker.jsx';
 
 export interface AddTransactionPayload {
   amount: number;
@@ -19,18 +19,43 @@ export interface AddTransactionProps {
   onCancel: () => void;
 }
 
+// Schema that only requires the fields the form provides.
+// id, createdAt, and recurringRuleId are assigned by the reducer.
 const FormSchema = TransactionSchema.partial({
   id: true,
   createdAt: true,
   recurringRuleId: true,
 });
 
-function today() {
+function today(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-export function AddTransaction({ accounts = [], categories = [], initialValues, onSubmit, onCancel }: AddTransactionProps): JSX.Element {
-  const [fields, setFields] = useState({
+interface FieldErrors {
+  amount?: string;
+  date?: string;
+  description?: string;
+  accountId?: string;
+  categoryId?: string;
+  [key: string]: string | undefined;
+}
+
+interface FormFields {
+  amount: string;
+  date: string;
+  description: string;
+  accountId: string;
+  categoryId: string | null;
+}
+
+export function AddTransaction({
+  accounts = [],
+  categories = [],
+  initialValues,
+  onSubmit,
+  onCancel,
+}: AddTransactionProps): JSX.Element {
+  const [fields, setFields] = useState<FormFields>({
     amount: initialValues?.amount != null ? String(initialValues.amount) : '',
     date: initialValues?.date ?? today(),
     description: initialValues?.description ?? '',
@@ -38,9 +63,9 @@ export function AddTransaction({ accounts = [], categories = [], initialValues, 
     categoryId: initialValues?.categoryId ?? null,
   });
 
-  const [errors, setErrors] = useState<Record<string, string | undefined>>({});
+  const [errors, setErrors] = useState<FieldErrors>({});
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleInputChange(e: React.ChangeEvent<HTMLInputElement>): void {
     const { name, value } = e.target;
     setFields(prev => ({ ...prev, [name]: value }));
     if (errors[name]) {
@@ -48,14 +73,22 @@ export function AddTransaction({ accounts = [], categories = [], initialValues, 
     }
   }
 
-  function handleCategoryChange(value: string | null) {
+  function handleSelectChange(e: React.ChangeEvent<HTMLSelectElement>): void {
+    const { name, value } = e.target;
+    setFields(prev => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: undefined }));
+    }
+  }
+
+  function handleCategoryChange(value: string | null): void {
     setFields(prev => ({ ...prev, categoryId: value }));
     if (errors.categoryId) {
       setErrors(prev => ({ ...prev, categoryId: undefined }));
     }
   }
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>): void {
     e.preventDefault();
 
     const raw = {
@@ -69,9 +102,9 @@ export function AddTransaction({ accounts = [], categories = [], initialValues, 
     const result = FormSchema.safeParse(raw);
 
     if (!result.success) {
-      const fieldErrors: Record<string, string> = {};
+      const fieldErrors: FieldErrors = {};
       for (const issue of result.error.issues) {
-        const key = issue.path[0];
+        const key = issue.path[0] as string;
         if (key && !fieldErrors[key]) {
           fieldErrors[key] = issue.message;
         }
@@ -107,7 +140,7 @@ export function AddTransaction({ accounts = [], categories = [], initialValues, 
           type="number"
           step="any"
           value={fields.amount}
-          onChange={handleChange}
+          onChange={handleInputChange}
           placeholder="e.g. -42.50"
           aria-invalid={Boolean(errors.amount)}
           aria-describedby={errors.amount ? 'txn-amount-error' : undefined}
@@ -128,7 +161,7 @@ export function AddTransaction({ accounts = [], categories = [], initialValues, 
           name="date"
           type="date"
           value={fields.date}
-          onChange={handleChange}
+          onChange={handleInputChange}
           aria-invalid={Boolean(errors.date)}
           aria-describedby={errors.date ? 'txn-date-error' : undefined}
           required
@@ -148,7 +181,7 @@ export function AddTransaction({ accounts = [], categories = [], initialValues, 
           name="description"
           type="text"
           value={fields.description}
-          onChange={handleChange}
+          onChange={handleInputChange}
           placeholder="e.g. Grocery run"
           aria-invalid={Boolean(errors.description)}
           aria-describedby={errors.description ? 'txn-description-error' : undefined}
@@ -168,7 +201,7 @@ export function AddTransaction({ accounts = [], categories = [], initialValues, 
           id="txn-accountId"
           name="accountId"
           value={fields.accountId}
-          onChange={handleChange}
+          onChange={handleSelectChange}
           aria-invalid={Boolean(errors.accountId)}
           aria-describedby={errors.accountId ? 'txn-accountId-error' : undefined}
           required
