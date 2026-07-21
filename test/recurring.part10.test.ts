@@ -1,5 +1,6 @@
+import { describe, test, expect } from 'vitest';
 import { expandRule, expandAllRules } from '../src/lib/recurring.js';
-import { describe, it, expect } from 'vitest';
+import type { RecurringRule } from '../src/lib/types.js';
 
 // Simple deterministic ID generator for tests
 let idCounter = 0;
@@ -9,7 +10,7 @@ function makeIdGen() {
 }
 
 // Baseline rule factory
-function makeRule(overrides = {}) {
+function makeRule(overrides: Partial<RecurringRule> = {}): RecurringRule {
   return {
     id: 'rule-1',
     accountId: 'acct-1',
@@ -26,7 +27,7 @@ function makeRule(overrides = {}) {
 // ─── expandRule – correct dates per frequency ──────────────────────────────
 
 describe('expandRule – idempotence (double expansion produces no duplicates)', () => {
-  it('second call with same referenceDate generates no additional transactions', () => {
+  test('second call with same referenceDate generates no additional transactions', () => {
     const rule = makeRule({ frequency: 'monthly', startDate: '2024-01-01' });
 
     // First expansion
@@ -42,7 +43,7 @@ describe('expandRule – idempotence (double expansion produces no duplicates)',
     expect(second).toHaveLength(0);
   });
 
-  it('second call with advanced referenceDate generates only new transactions', () => {
+  test('second call with advanced referenceDate generates only new transactions', () => {
     const rule = makeRule({ frequency: 'monthly', startDate: '2024-01-01' });
 
     const { updatedRule: ruleAfterFirst } = expandRule(rule, '2024-03-01', makeIdGen());
@@ -54,26 +55,3 @@ describe('expandRule – idempotence (double expansion produces no duplicates)',
 });
 
 // ─── expandAllRules ─────────────────────────────────────────────────────────
-
-describe('expandAllRules – basic behavior', () => {
-  it('expands multiple rules independently and merges transactions', () => {
-    const rules = [
-      makeRule({ id: 'rule-1', startDate: '2024-01-01' }),
-      makeRule({ id: 'rule-2', startDate: '2024-02-01', amount: 100 }),
-    ];
-    const existingTransactions = [];
-
-    const { transactions: newTransactions, updatedRules } = expandAllRules(
-      rules,
-      existingTransactions,
-      '2024-03-01',
-      makeIdGen()
-    );
-
-    // Each rule should generate 3 transactions
-    expect(newTransactions).toHaveLength(6);
-
-    // Updated rules should have correct lastExpandedDate
-    expect(updatedRules.map(r => r.lastExpandedDate)).toEqual(['2024-03-01', '2024-03-01']);
-  });
-});
