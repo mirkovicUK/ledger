@@ -65,7 +65,7 @@ export const ExportPayloadSchema = z.object({
 });
 
 // ---------------------------------------------------------------------------
-// Validation Helpers — each throws ZodError on failure, returns parsed value
+// TypeScript Types
 // ---------------------------------------------------------------------------
 
 export type Account = z.infer<typeof AccountSchema>;
@@ -75,6 +75,10 @@ export type Budget = z.infer<typeof BudgetSchema>;
 export type RecurringRule = z.infer<typeof RecurringRuleSchema>;
 export type AppState = z.infer<typeof AppStateSchema>;
 export type ExportPayload = z.infer<typeof ExportPayloadSchema>;
+
+// ---------------------------------------------------------------------------
+// Validation Helpers — each throws ZodError on failure, returns parsed value
+// ---------------------------------------------------------------------------
 
 export function validateAccount(data: unknown): Account {
   return AccountSchema.parse(data);
