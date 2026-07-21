@@ -1,20 +1,19 @@
-import { useLedger } from '../hooks/useLedger';
-import { useBudgets } from '../hooks/useBudgets.js';
-import Summary from '../components/Summary';
-import TransactionList from '../components/TransactionList';
-import BudgetBar from '../components/BudgetBar';
+import { useLedger } from '../hooks/useLedger.tsx';
+import { useBudgets } from '../hooks/useBudgets.ts';
+import Summary from '../components/Summary.tsx';
+import TransactionList from '../components/TransactionList.tsx';
+import BudgetBar from '../components/BudgetBar.tsx';
 import styles from './Dashboard.module.css';
-import type { Category } from '../lib/types.js';
-import type { BudgetProgress } from '../hooks/useBudgets.js';
+import type { ReactElement } from 'react';
 
 /**
  * Dashboard page — shows balance summary, recent transactions, and active budgets.
  *
  * Requirements: 7.1, 7.2, 7.3, 7.4, 7.5
  */
-export default function Dashboard(): JSX.Element {
+export default function Dashboard(): ReactElement {
   const { state, totalBalance, accountBalances } = useLedger();
-  const budgetProgress: BudgetProgress[] = useBudgets(state);
+  const budgetProgress = useBudgets(state);
 
   const hasAccounts = state.accounts.length > 0;
   const hasTransactions = state.transactions.length > 0;
@@ -53,7 +52,7 @@ export default function Dashboard(): JSX.Element {
         <h2 id="recent-heading" className={styles.sectionHeading}>Recent Transactions</h2>
         <TransactionList
           transactions={recentTransactions}
-          categories={state.categories as Category[]}
+          categories={state.categories}
           onEdit={noop}
           onDelete={noop}
         />
@@ -65,7 +64,7 @@ export default function Dashboard(): JSX.Element {
           <h2 id="budgets-heading" className={styles.sectionHeading}>Budgets</h2>
           <div className={styles.budgetGrid}>
             {budgetProgress.map(budget => {
-              const category = state.categories.find(c => c.id === budget.categoryId) as Category | undefined;
+              const category = state.categories.find(c => c.id === budget.categoryId);
               return (
                 <BudgetBar
                   key={budget.id}
