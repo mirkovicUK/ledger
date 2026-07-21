@@ -5,23 +5,6 @@
  * @param {FilterCriteria} criteria
  * @returns {Array}
  */
-export interface DateRange {
-  from: string;
-  to: string;
-}
-
-export interface AmountRange {
-  min: number;
-  max: number;
-}
-
-export interface FilterCriteria {
-  accountId?: string | null;
-  categoryId?: string | null;
-  dateRange?: DateRange | null;
-  amountRange?: AmountRange | null;
-}
-
 export function applyFilters<T extends { accountId?: string; categoryId?: string | null; date?: string; amount?: number }>(
   transactions: T[],
   criteria: FilterCriteria
@@ -60,4 +43,21 @@ export function applyFilters<T extends { accountId?: string; categoryId?: string
 
     return true;
   });
+}
+
+export interface DateRange {
+  from: string;
+  to: string;
+}
+
+export interface AmountRange {
+  min: number;
+  max: number;
+}
+
+export interface FilterCriteria {
+  accountId?: string | null;
+  categoryId?: string | null;
+  dateRange?: DateRange | null;
+  amountRange?: AmountRange | null;
 }
