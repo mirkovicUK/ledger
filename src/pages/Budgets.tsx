@@ -5,14 +5,12 @@ import BudgetBar from '../components/BudgetBar.jsx';
 import { BudgetForm } from '../components/BudgetForm.jsx';
 import { RecurringRuleForm } from '../components/RecurringRuleForm.jsx';
 import { generateId } from '../lib/id.js';
-import type { Budget, RecurringRule } from '../lib/types.js';
 import type { BudgetFormPayload } from '../components/BudgetForm.jsx';
 import type { RecurringRuleFormPayload } from '../components/RecurringRuleForm.jsx';
+import type { Budget, RecurringRule } from '../lib/types.js';
 import type { BudgetProgress } from '../hooks/useBudgets.js';
 
-type StylesType = { readonly [key: string]: string };
-import stylesRaw from './Budgets.module.css';
-const styles = stylesRaw as StylesType;
+import styles from './Budgets.module.css';
 
 /**
  * Budgets page — budget management, category management, recurring rule management.
@@ -39,7 +37,7 @@ export default function Budgets(): JSX.Element {
 
   // ── Budget handlers ───────────────────────────────────────────────────────
 
-  function handleCreateBudget(payload: BudgetFormPayload) {
+  function handleCreateBudget(payload: BudgetFormPayload): void {
     dispatch({
       type: 'CREATE_BUDGET',
       payload: { ...payload, id: generateId() },
@@ -47,7 +45,7 @@ export default function Budgets(): JSX.Element {
     setShowBudgetForm(false);
   }
 
-  function handleEditBudget(payload: BudgetFormPayload) {
+  function handleEditBudget(payload: BudgetFormPayload): void {
     dispatch({
       type: 'EDIT_BUDGET',
       payload: { ...payload, id: editingBudget!.id },
@@ -55,23 +53,23 @@ export default function Budgets(): JSX.Element {
     setEditingBudget(null);
   }
 
-  function handleDeleteBudget(id: string) {
+  function handleDeleteBudget(id: string): void {
     dispatch({ type: 'DELETE_BUDGET', payload: { id } });
   }
 
-  function startEditBudget(budget: BudgetProgress) {
+  function startEditBudget(budget: BudgetProgress): void {
     setEditingBudget(budget);
     setShowBudgetForm(false);
   }
 
-  function cancelBudgetForm() {
+  function cancelBudgetForm(): void {
     setShowBudgetForm(false);
     setEditingBudget(null);
   }
 
   // ── Category handlers ─────────────────────────────────────────────────────
 
-  function handleAddCategory(e: React.FormEvent<HTMLFormElement>) {
+  function handleAddCategory(e: React.FormEvent<HTMLFormElement>): void {
     e.preventDefault();
     const name = newCategoryName.trim();
     if (!name) {
@@ -90,13 +88,13 @@ export default function Budgets(): JSX.Element {
     setCategoryError('');
   }
 
-  function handleDeleteCategory(id: string) {
+  function handleDeleteCategory(id: string): void {
     dispatch({ type: 'DELETE_CATEGORY', payload: { id } });
   }
 
   // ── Recurring rule handlers ───────────────────────────────────────────────
 
-  function handleCreateRule(payload: RecurringRuleFormPayload) {
+  function handleCreateRule(payload: RecurringRuleFormPayload): void {
     dispatch({
       type: 'CREATE_RECURRING_RULE',
       payload: { ...payload, id: generateId(), lastExpandedDate: null },
@@ -104,7 +102,7 @@ export default function Budgets(): JSX.Element {
     setShowRuleForm(false);
   }
 
-  function handleEditRule(payload: RecurringRuleFormPayload) {
+  function handleEditRule(payload: RecurringRuleFormPayload): void {
     dispatch({
       type: 'EDIT_RECURRING_RULE',
       payload: { ...payload, id: editingRule!.id },
@@ -112,16 +110,16 @@ export default function Budgets(): JSX.Element {
     setEditingRule(null);
   }
 
-  function handleDeleteRule(id: string) {
+  function handleDeleteRule(id: string): void {
     dispatch({ type: 'DELETE_RECURRING_RULE', payload: { id } });
   }
 
-  function startEditRule(rule: RecurringRule) {
+  function startEditRule(rule: RecurringRule): void {
     setEditingRule(rule);
     setShowRuleForm(false);
   }
 
-  function cancelRuleForm() {
+  function cancelRuleForm(): void {
     setShowRuleForm(false);
     setEditingRule(null);
   }
