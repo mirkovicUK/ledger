@@ -9,10 +9,10 @@ import {
 } from '../src/lib/date.js';
 
 // ---------------------------------------------------------------------------
-// parseDate / formatDate roundtrip
+// periodStart and periodEnd consistency
 // ---------------------------------------------------------------------------
 describe('periodStart and periodEnd consistency', () => {
-  const testCases = [
+  const testCases: Array<{ date: string; period: 'weekly' | 'monthly' | 'yearly' }> = [
     { date: '2024-03-15', period: 'monthly' },
     { date: '2024-06-01', period: 'monthly' },
     { date: '2024-12-31', period: 'monthly' },
