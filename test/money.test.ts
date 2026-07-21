@@ -7,8 +7,8 @@ describe('sumAmounts', () => {
   });
 
   test('returns 0 for null/undefined input', () => {
-    expect(sumAmounts(null)).toBe(0);
-    expect(sumAmounts(undefined)).toBe(0);
+    expect(sumAmounts(null as unknown as Array<{ amount: number }>)).toBe(0);
+    expect(sumAmounts(undefined as unknown as Array<{ amount: number }>)).toBe(0);
   });
 
   test('returns the amount of a single transaction', () => {
