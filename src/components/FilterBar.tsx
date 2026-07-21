@@ -9,30 +9,27 @@
  *   onFiltersChange(newFilters)   — called when any filter changes
  *   onSortChange(newSortConfig)   — called when sort config changes
  */
-import type { Pick as PickType } from '../lib/types.js';
+import type { Account, Category } from '../lib/types.js';
 import type { FilterCriteria } from '../lib/filter.js';
 import type { SortConfig } from '../lib/sort.js';
-import type { Account, Category } from '../lib/types.js';
-import { useState } from 'react';
 
 export interface FilterBarProps {
-  accounts?: PickType<Account, 'id' | 'name'>[];
-  categories?: PickType<Category, 'id' | 'name'>[];
+  accounts?: Pick<Account, 'id' | 'name'>[];
+  categories?: Pick<Category, 'id' | 'name'>[];
   filters?: FilterCriteria;
   sortConfig?: Partial<SortConfig>;
   onFiltersChange: (filters: FilterCriteria) => void;
   onSortChange: (sortConfig: SortConfig) => void;
 }
 
-export function FilterBar(props: FilterBarProps): JSX.Element {
-  const {
-    accounts = [],
-    categories = [],
-    filters = {},
-    sortConfig = {},
-    onFiltersChange,
-    onSortChange,
-  } = props;
+export function FilterBar({
+  accounts = [],
+  categories = [],
+  filters = {},
+  sortConfig = {},
+  onFiltersChange,
+  onSortChange,
+}: FilterBarProps): JSX.Element {
   const { accountId = null, categoryId = null, dateRange = null, amountRange = null } = filters;
   const { field = 'date', direction = 'desc' } = sortConfig;
 
@@ -68,9 +65,13 @@ export function FilterBar(props: FilterBarProps): JSX.Element {
     const raw = e.target.value;
     const min = raw === '' ? null : parseFloat(raw);
     const max = amountRange?.max ?? null;
+    const newAmountRange =
+      min !== null || max !== null
+        ? { min: min !== null ? min : 0, max: max !== null ? max : 0 }
+        : null;
     onFiltersChange({
       ...filters,
-      amountRange: min !== null || max !== null ? { min: min ?? null, max: max ?? null } : null,
+      amountRange: newAmountRange,
     });
   }
 
@@ -78,20 +79,24 @@ export function FilterBar(props: FilterBarProps): JSX.Element {
     const raw = e.target.value;
     const min = amountRange?.min ?? null;
     const max = raw === '' ? null : parseFloat(raw);
+    const newAmountRange =
+      min !== null || max !== null
+        ? { min: min !== null ? min : 0, max: max !== null ? max : 0 }
+        : null;
     onFiltersChange({
       ...filters,
-      amountRange: min !== null || max !== null ? { min: min ?? null, max: max ?? null } : null,
+      amountRange: newAmountRange,
     });
   }
 
   // ── sort helpers ─────────────────────────────────────────────────────────────
 
   function handleFieldChange(e: React.ChangeEvent<HTMLSelectElement>) {
-    onSortChange({ field: e.target.value as SortConfig['field'], direction });
+    onSortChange({ field: e.target.value as SortConfig['field'], direction: direction as SortConfig['direction'] });
   }
 
   function handleDirectionToggle() {
-    onSortChange({ field, direction: direction === 'asc' ? 'desc' : 'asc' });
+    onSortChange({ field: field as SortConfig['field'], direction: direction === 'asc' ? 'desc' : 'asc' });
   }
 
   // ── render ───────────────────────────────────────────────────────────────────
@@ -107,7 +112,7 @@ export function FilterBar(props: FilterBarProps): JSX.Element {
           onChange={handleAccountChange}
         >
           <option value="">All Accounts</option>
-          {accounts.map((acc) => (
+          {accounts.map(acc => (
             <option key={acc.id} value={acc.id}>{acc.name}</option>
           ))}
         </select>
@@ -122,7 +127,7 @@ export function FilterBar(props: FilterBarProps): JSX.Element {
           onChange={handleCategoryChange}
         >
           <option value="">All Categories</option>
-          {categories.map((cat) => (
+          {categories.map(cat => (
             <option key={cat.id} value={cat.id}>{cat.name}</option>
           ))}
         </select>
