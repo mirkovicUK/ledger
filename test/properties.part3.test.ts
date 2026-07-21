@@ -1,10 +1,6 @@
-import { computeBudgetSpending } from '../src/lib/budget.js';
-import { periodStart, periodEnd, isWithinRange } from '../src/lib/date.js';
-import { applyFilters } from '../src/lib/filter.js';
-import { exportToJSON, importFromJSON } from '../src/lib/storage.js';
-import { sortTransactions } from '../src/lib/sort.js';
-import { expandRule } from '../src/lib/recurring.js';
 import { describe, test, expect } from 'vitest';
+import { applyFilters } from '../src/lib/filter.js';
+import type { FilterCriteria, DateRange, AmountRange } from '../src/lib/filter.js';
 
 // ---------------------------------------------------------------------------
 // Property 3: Budget spending equals sum of matching transactions in period
@@ -21,7 +17,7 @@ describe('Property 8: Filter results satisfy all applied criteria', () => {
    */
 
   const P8_ACCOUNT_IDS = ['acct-1', 'acct-2', 'acct-3'];
-  const P8_CATEGORY_IDS = ['cat-1', 'cat-2', 'cat-3', null];
+  const P8_CATEGORY_IDS: Array<string | null> = ['cat-1', 'cat-2', 'cat-3', null];
 
   function p8RandInt(min: number, max: number): number {
     return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -53,31 +49,24 @@ describe('Property 8: Filter results satisfy all applied criteria', () => {
     }));
   }
 
-  function p8GenerateCriteria() {
-    const criteria: {
-      accountId: string | null;
-      categoryId: string | null;
-      dateRange: { from: string; to: string } | null;
-      amountRange: { min: number; max: number } | null;
-    } = {
-      accountId: null,
-      categoryId: null,
-      dateRange: null,
-      amountRange: null,
-    };
+  function p8GenerateCriteria(): FilterCriteria {
+    let accountId: string | null = null;
+    let categoryId: string | null = null;
+    let dateRange: DateRange | null = null;
+    let amountRange: AmountRange | null = null;
 
     // accountId: null or one of the 3 account ids
     if (Math.random() < 0.5) {
-      criteria.accountId = P8_ACCOUNT_IDS[p8RandInt(0, P8_ACCOUNT_IDS.length - 1)];
+      accountId = P8_ACCOUNT_IDS[p8RandInt(0, P8_ACCOUNT_IDS.length - 1)];
     }
 
     // categoryId: null, one of the 3 real category ids, or 'uncategorized'
     if (Math.random() < 0.5) {
       const roll = Math.random();
       if (roll < 0.6) {
-        criteria.categoryId = ['cat-1', 'cat-2', 'cat-3'][p8RandInt(0, 2)];
+        categoryId = ['cat-1', 'cat-2', 'cat-3'][p8RandInt(0, 2)];
       } else {
-        criteria.categoryId = 'uncategorized';
+        categoryId = 'uncategorized';
       }
     }
 
@@ -87,7 +76,7 @@ describe('Property 8: Filter results satisfy all applied criteria', () => {
       const toMonth = p8RandInt(7, 12);
       const fromDay = p8RandInt(1, 28);
       const toDay = p8RandInt(1, 28);
-      criteria.dateRange = {
+      dateRange = {
         from: `2024-${p8Pad(fromMonth)}-${p8Pad(fromDay)}`,
         to: `2024-${p8Pad(toMonth)}-${p8Pad(toDay)}`,
       };
@@ -97,10 +86,10 @@ describe('Property 8: Filter results satisfy all applied criteria', () => {
     if (Math.random() < 0.5) {
       const min = p8RandFloat(-500, 250);
       const max = p8RandFloat(min, 1000);
-      criteria.amountRange = { min, max };
+      amountRange = { min, max };
     }
 
-    return criteria;
+    return { accountId, categoryId, dateRange, amountRange };
   }
 
   test('every result satisfies ALL non-null criteria across 100 random cases', () => {
@@ -139,7 +128,7 @@ describe('Property 8: Filter results satisfy all applied criteria', () => {
   test('null criteria returns all transactions unchanged across 100 random cases', () => {
     for (let iteration = 0; iteration < 100; iteration++) {
       const transactions = p8GenerateTransactions();
-      const nullCriteria = {
+      const nullCriteria: FilterCriteria = {
         accountId: null,
         categoryId: null,
         dateRange: null,
@@ -155,6 +144,3 @@ describe('Property 8: Filter results satisfy all applied criteria', () => {
 // Property 9: Sort results are correctly ordered
 // Validates: Requirements 6.2
 // ---------------------------------------------------------------------------
-
-
-```
