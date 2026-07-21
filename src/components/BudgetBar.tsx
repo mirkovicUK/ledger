@@ -13,18 +13,6 @@ function formatCurrency(amount: number): string {
   });
 }
 
-/**
- * BudgetBar — visual progress bar showing ratio of spent to budget limit.
- *
- * Props:
- *   budget       {object}  – { id, categoryId, limit, period, startDate }
- *   spent        {number}  – total amount spent in the current period
- *   ratio        {number}  – spent / limit (may exceed 1.0 when overspent)
- *   overspent    {boolean} – true when spent > limit
- *   categoryName {string}  – optional human-readable category name
- *
- * Requirements: 4.2, 4.3
- */
 export interface BudgetBarProps {
   budget: Budget;
   spent: number;
@@ -33,6 +21,11 @@ export interface BudgetBarProps {
   categoryName?: string;
 }
 
+/**
+ * BudgetBar — visual progress bar showing ratio of spent to budget limit.
+ *
+ * Requirements: 4.2, 4.3
+ */
 export default function BudgetBar({ budget, spent, ratio, overspent, categoryName }: BudgetBarProps): JSX.Element {
   // Cap bar fill at 100% visually; excess is shown via overspent styling
   const fillPercent = Math.min(ratio, 1) * 100;
@@ -40,32 +33,37 @@ export default function BudgetBar({ budget, spent, ratio, overspent, categoryNam
 
   const label = categoryName || budget.id;
 
+  const containerClass = [styles['container'], overspent ? styles['overspentContainer'] : ''].filter(Boolean).join(' ');
+  const fillClass = [styles['fill'], overspent ? styles['overspentFill'] : ''].filter(Boolean).join(' ');
+  const amountsClass = [styles['amounts'], overspent ? styles['overspentText'] : ''].filter(Boolean).join(' ');
+  const percentageClass = [styles['percentage'], overspent ? styles['overspentText'] : ''].filter(Boolean).join(' ');
+
   return (
     <div
-      className={`${styles.container} ${overspent ? styles.overspentContainer : ''}`}
+      className={containerClass}
       aria-label={`Budget for ${label}: ${formatCurrency(spent)} of ${formatCurrency(budget.limit)} ${budget.period}`}
     >
       {/* Header row: label + period */}
-      <div className={styles.header}>
-        <span className={styles.label}>{label}</span>
-        <span className={styles.period}>{budget.period}</span>
+      <div className={styles['header']}>
+        <span className={styles['label']}>{label}</span>
+        <span className={styles['period']}>{budget.period}</span>
       </div>
 
       {/* Progress bar track */}
-      <div className={styles.track} role="progressbar" aria-valuenow={fillPercent} aria-valuemin={0} aria-valuemax={100}>
+      <div className={styles['track']} role="progressbar" aria-valuenow={fillPercent} aria-valuemin={0} aria-valuemax={100}>
         <div
-          className={`${styles.fill} ${overspent ? styles.overspentFill : ''}`}
+          className={fillClass}
           style={{ width: `${fillPercent}%` }}
         />
-        {overspent && <div className={styles.overflowIndicator} aria-hidden="true" />}
+        {overspent && <div className={styles['overflowIndicator']} aria-hidden="true" />}
       </div>
 
       {/* Footer row: spent / limit amounts + percentage */}
-      <div className={styles.footer}>
-        <span className={`${styles.amounts} ${overspent ? styles.overspentText : ''}`}>
+      <div className={styles['footer']}>
+        <span className={amountsClass}>
           {formatCurrency(spent)} / {formatCurrency(budget.limit)}
         </span>
-        <span className={`${styles.percentage} ${overspent ? styles.overspentText : ''}`}>
+        <span className={percentageClass}>
           {percentDisplay}%
         </span>
       </div>
