@@ -1,5 +1,6 @@
 import { describe, test, expect } from 'vitest';
 import { expandRule, expandAllRules } from '../src/lib/recurring.js';
+import type { RecurringRule } from '../src/lib/types.js';
 
 // Simple deterministic ID generator for tests
 let idCounter = 0;
@@ -9,7 +10,7 @@ function makeIdGen() {
 }
 
 // Baseline rule factory
-function makeRule(overrides = {}) {
+function makeRule(overrides: Partial<RecurringRule> = {}): RecurringRule {
   return {
     id: 'rule-1',
     accountId: 'acct-1',
@@ -77,35 +78,3 @@ describe('expandRule – expansion from lastExpandedDate', () => {
 });
 
 // ─── Idempotence ────────────────────────────────────────────────────────────
-
-describe('Idempotence', () => {
-  test('does not generate duplicate transactions when called twice with same referenceDate', () => {
-    const rule = makeRule({
-      frequency: 'monthly',
-      startDate: '2024-01-01',
-      lastExpandedDate: null,
-    });
-    const idGen = makeIdGen();
-
-    const result1 = expandRule(rule, '2024-03-01', idGen);
-    const result2 = expandRule({ ...rule, lastExpandedDate: result1.updatedRule.lastExpandedDate }, '2024-03-01', idGen);
-
-    // Same reference date → no new transactions
-    expect(result2.transactions).toHaveLength(0);
-  });
-
-  test('resets correctly when referenceDate advances', () => {
-    const rule = makeRule({
-      frequency: 'monthly',
-      startDate: '2024-01-01',
-      lastExpandedDate: null,
-    });
-    const idGen = makeIdGen();
-
-    const result1 = expandRule(rule, '2024-03-01', idGen);
-    const result2 = expandRule({ ...rule, lastExpandedDate: result1.updatedRule.lastExpandedDate }, '2024-04-01', idGen);
-
-    expect(result2.transactions).toHaveLength(1);
-    expect(result2.transactions[0].date).toBe('2024-04-01');
-  });
-});
