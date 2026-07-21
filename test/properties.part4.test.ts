@@ -81,9 +81,9 @@ describe('Property 9: Sort results are correctly ordered', () => {
    *   = 0 → equal
    *   > 0 → b before a
    */
-  function compareValues(a: any, b: any, field: string): number {
+  function compareValues(a: { amount?: number; date?: string; description?: string }, b: { amount?: number; date?: string; description?: string }, field: string): number {
     if (field === 'amount') {
-      return a.amount - b.amount;
+      return (a.amount ?? 0) - (b.amount ?? 0);
     }
     // date and description: lexicographic
     const aVal = a[field] ?? '';
@@ -145,3 +145,6 @@ describe('Property 9: Sort results are correctly ordered', () => {
 // Property 10: Export/import roundtrip preserves all data
 // Validates: Requirements 8.6
 // ---------------------------------------------------------------------------
+
+
+```
