@@ -1,26 +1,15 @@
-import { computeBudgetSpending } from '../src/lib/budget.js';
-import { periodStart, periodEnd, isWithinRange } from '../src/lib/date.js';
-import { applyFilters } from '../src/lib/filter.js';
-import { exportToJSON, importFromJSON } from '../src/lib/storage.js';
-import { sortTransactions } from '../src/lib/sort.js';
-import { expandRule } from '../src/lib/recurring.js';
 import { describe, test, expect } from 'vitest';
+import { sortTransactions } from '../src/lib/sort.js';
+import type { SortConfig } from '../src/lib/sort.js';
 
 // ---------------------------------------------------------------------------
-// Property 3: Budget spending equals sum of matching transactions in period
-// Validates: Requirements 4.4, 4.5
+// Property 9: Sort results are correctly ordered
+// Validates: Requirements 6.2
 // ---------------------------------------------------------------------------
 
 describe('Property 9: Sort results are correctly ordered', () => {
-  /**
-   * For any sorted array, every adjacent pair (result[i], result[i+1])
-   * satisfies the ordering constraint for the given field and direction.
-   *
-   * **Validates: Requirements 6.2**
-   */
-
-  const FIELDS = ['date', 'amount', 'description'];
-  const DIRECTIONS = ['asc', 'desc'];
+  const FIELDS: Array<'date' | 'amount' | 'description'> = ['date', 'amount', 'description'];
+  const DIRECTIONS: Array<'asc' | 'desc'> = ['asc', 'desc'];
 
   function p9RandInt(min: number, max: number): number {
     return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -34,14 +23,12 @@ describe('Property 9: Sort results are correctly ordered', () => {
     return String(n).padStart(2, '0');
   }
 
-  /** Random YYYY-MM-DD in 2024 */
   function p9RandomDate2024(): string {
     const month = p9RandInt(1, 12);
     const day = p9RandInt(1, 28);
     return `2024-${p9Pad(month)}-${p9Pad(day)}`;
   }
 
-  /** Random alphanumeric string of length 4-12 */
   function p9RandomDescription(): string {
     const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
     const len = p9RandInt(4, 12);
@@ -52,8 +39,7 @@ describe('Property 9: Sort results are correctly ordered', () => {
     return s;
   }
 
-  /** Generate 2–15 random transactions */
-  function p9GenerateTransactions(): Array<{
+  interface TestTransaction {
     id: string;
     accountId: string;
     amount: number;
@@ -61,7 +47,9 @@ describe('Property 9: Sort results are correctly ordered', () => {
     description: string;
     categoryId: null;
     createdAt: string;
-  }> {
+  }
+
+  function p9GenerateTransactions(): TestTransaction[] {
     const count = p9RandInt(2, 15);
     return Array.from({ length: count }, (_, i) => ({
       id: `tx-p9-${i}`,
@@ -74,18 +62,10 @@ describe('Property 9: Sort results are correctly ordered', () => {
     }));
   }
 
-  /**
-   * Compare two values for the given field and return a number following
-   * the same sign convention as Array.prototype.sort comparators:
-   *   < 0 → a before b
-   *   = 0 → equal
-   *   > 0 → b before a
-   */
-  function compareValues(a: { amount?: number; date?: string; description?: string }, b: { amount?: number; date?: string; description?: string }, field: string): number {
+  function compareValues(a: TestTransaction, b: TestTransaction, field: 'date' | 'amount' | 'description'): number {
     if (field === 'amount') {
-      return (a.amount ?? 0) - (b.amount ?? 0);
+      return a.amount - b.amount;
     }
-    // date and description: lexicographic
     const aVal = a[field] ?? '';
     const bVal = b[field] ?? '';
     if (aVal < bVal) return -1;
@@ -101,17 +81,15 @@ describe('Property 9: Sort results are correctly ordered', () => {
       const field = FIELDS[p9RandInt(0, FIELDS.length - 1)];
       const direction = DIRECTIONS[p9RandInt(0, DIRECTIONS.length - 1)];
 
-      const result = sortTransactions(transactions, { field, direction });
+      const config: SortConfig = { field, direction };
+      const result = sortTransactions(transactions, config);
 
-      // Verify pairwise ordering invariant for all adjacent pairs
       for (let i = 0; i < result.length - 1; i++) {
-        const cmp = compareValues(result[i], result[i + 1], field);
+        const cmp = compareValues(result[i] as TestTransaction, result[i + 1] as TestTransaction, field);
 
         if (direction === 'asc') {
-          // result[i] should be <= result[i+1]
           expect(cmp).toBeLessThanOrEqual(0);
         } else {
-          // direction === 'desc': result[i] should be >= result[i+1]
           expect(cmp).toBeGreaterThanOrEqual(0);
         }
       }
@@ -127,9 +105,9 @@ describe('Property 9: Sort results are correctly ordered', () => {
       const field = FIELDS[p9RandInt(0, FIELDS.length - 1)];
       const direction = DIRECTIONS[p9RandInt(0, DIRECTIONS.length - 1)];
 
-      sortTransactions(transactions, { field, direction });
+      const config: SortConfig = { field, direction };
+      sortTransactions(transactions, config);
 
-      // Original array must be unchanged
       expect(transactions).toHaveLength(original.length);
       for (let i = 0; i < original.length; i++) {
         expect(transactions[i].id).toBe(original[i].id);
@@ -145,6 +123,3 @@ describe('Property 9: Sort results are correctly ordered', () => {
 // Property 10: Export/import roundtrip preserves all data
 // Validates: Requirements 8.6
 // ---------------------------------------------------------------------------
-
-
-```
