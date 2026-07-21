@@ -1,0 +1,58 @@
+.page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Onboarding prompt */
+.onboarding {
+  background-color: #f0f4ff;
+  border: 1px solid #c7d7fa;
+  border-radius: 8px;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.onboardingText {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #3b5bdb;
+  font-weight: 500;
+}
+
+/* Generic section wrapper */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.sectionHeading {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1a1a2e;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #e9ecef;
+}
+
+/* Budget grid — responsive two-column layout */
+.budgetGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding: 1rem 0.75rem;
+    gap: 1.5rem;
+  }
+
+  .budgetGrid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,100 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* ── Total balance card ── */
+.totalCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 1.5rem 2rem;
+  background: #1a1a2e;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  text-align: center;
+}
+
+.totalLabel {
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #a0a0b8;
+}
+
+.totalAmount {
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: #e8e8f0;
+  line-height: 1.1;
+}
+
+/* ── Per-account list ── */
+.accountList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.accountCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 1.25rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.15s ease;
+}
+
+.accountCard:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.accountInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.accountName {
+  font-size: 0.975rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.accountType {
+  font-size: 0.78rem;
+  color: #6b7280;
+  text-transform: capitalize;
+}
+
+.accountBalance {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* ── Negative balance ── */
+.negative {
+  color: #dc2626;
+}
+
+/* ── Empty state ── */
+.emptyState {
+  margin: 0;
+  padding: 2rem 1.25rem;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 0.95rem;
+  border: 2px dashed #e5e7eb;
+  border-radius: 8px;
+  background: #f9fafb;
+}

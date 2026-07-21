@@ -1,0 +1,129 @@
+/* ── Page layout ──────────────────────────────────────────────────────────── */
+
+.page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* ── Section ──────────────────────────────────────────────────────────────── */
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.sectionHeading {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+/* ── Add / primary action button ──────────────────────────────────────────── */
+
+.addButton {
+  padding: 0.4rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: 1px solid #1976d2;
+  border-radius: 4px;
+  background: #1976d2;
+  color: #fff;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.addButton:hover:not(:disabled) {
+  background: #1565c0;
+  border-color: #1565c0;
+}
+
+.addButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ── Inline form panel ────────────────────────────────────────────────────── */
+
+.formPanel {
+  padding: 1.25rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  background: #fafafa;
+}
+
+/* ── Empty state ──────────────────────────────────────────────────────────── */
+
+.emptyState {
+  margin: 0;
+  color: #757575;
+  font-size: 0.9rem;
+}
+
+/* ── Account list ─────────────────────────────────────────────────────────── */
+
+.accountList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.accountItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  background: #fff;
+  flex-wrap: wrap;
+}
+
+.accountName {
+  font-weight: 500;
+  flex: 1 1 auto;
+}
+
+.accountType {
+  font-size: 0.8rem;
+  color: #757575;
+  text-transform: capitalize;
+}
+
+/* ── Row action buttons ───────────────────────────────────────────────────── */
+
+.rowActions {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.rowActions button {
+  padding: 0.25rem 0.6rem;
+  font-size: 0.8rem;
+  border: 1px solid #bdbdbd;
+  border-radius: 3px;
+  background: #fff;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.rowActions button:hover {
+  background: #f5f5f5;
+}
