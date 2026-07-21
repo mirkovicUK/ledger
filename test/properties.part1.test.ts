@@ -164,3 +164,6 @@ function p2RandItem(arr: string[]) {
 // Property 2: Cascade delete removes account and all associated transactions
 // Validates: Requirements 1.4
 // ---------------------------------------------------------------------------
+
+
+export {}; // Prevent accidental hoisting issues
