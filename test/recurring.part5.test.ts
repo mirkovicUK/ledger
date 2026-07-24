@@ -9,7 +9,7 @@ function makeIdGen() {
 }
 
 // Baseline rule factory
-function makeRule(overrides = {}) {
+function makeRule(overrides: Record<string, any> = {}) {
   return {
     id: 'rule-1',
     accountId: 'acct-1',
@@ -23,7 +23,7 @@ function makeRule(overrides = {}) {
   };
 }
 
-// ─── expandRule – correct dates per frequency ──────────────────────────────────
+// ─── expandRule – correct dates per frequency ──────────────────────────────
 
 describe('expandRule – yearly frequency', () => {
   it('generates one transaction per year', () => {
