@@ -1,11 +1,12 @@
+import { describe, test, expect } from 'vitest';
 import { computeBudgetSpending } from '../src/lib/budget.js';
 import { periodStart, periodEnd, isWithinRange } from '../src/lib/date.js';
 import { applyFilters } from '../src/lib/filter.js';
 import { exportToJSON, importFromJSON } from '../src/lib/storage.js';
 import { sortTransactions } from '../src/lib/sort.js';
 import { expandRule } from '../src/lib/recurring.js';
-import { describe, test, expect } from 'vitest';
-import { ledgerReducer, INITIAL_STATE } from '../src/lib/ledgerReducer.js';
+import { INITIAL_STATE, ledgerReducer } from '../src/lib/ledgerReducer.js';
+import type { AppState, Account } from '../src/lib/types.js';
 
 // ---------------------------------------------------------------------------
 // Property 3: Budget spending equals sum of matching transactions in period
@@ -44,7 +45,7 @@ describe('Property 12: Referential integrity — transactions with non-existent 
   }
 
   /** Generate a valid transaction payload but with a guaranteed non-existent accountId */
-  function p12TransactionPayload(rng: () => number, nonExistentId: string, overrides: any = {}) {
+  function p12TransactionPayload(rng: () => number, nonExistentId: string, overrides: Record<string, unknown> = {}) {
     return {
       accountId: nonExistentId,
       amount: parseFloat((rng() * 2000 - 500).toFixed(2)),
@@ -74,14 +75,14 @@ describe('Property 12: Referential integrity — transactions with non-existent 
   });
 
   test('EDIT_TRANSACTION with non-existent accountId in a state with accounts returns same reference (100 iterations)', () => {
-    const ACCOUNT_TYPES = ['checking', 'savings', 'credit', 'cash', 'investment'];
+    const ACCOUNT_TYPES = ['checking', 'savings', 'credit', 'cash', 'investment'] as const;
 
     for (let i = 0; i < 100; i++) {
       const rng = makePrng(i * 9431 + 77);
 
       // Build a state with 1–3 real accounts
       const accountCount = Math.floor(rng() * 3) + 1;
-      const accounts = Array.from({ length: accountCount }, (_, k) => ({
+      const accounts: Account[] = Array.from({ length: accountCount }, (_, k) => ({
         id: `acc-p12-${i}-${k}`,
         name: `Account ${k}`,
         type: ACCOUNT_TYPES[Math.floor(rng() * ACCOUNT_TYPES.length)],
@@ -101,7 +102,7 @@ describe('Property 12: Referential integrity — transactions with non-existent 
         createdAt: new Date().toISOString(),
       };
 
-      const state = {
+      const state: AppState = {
         ...INITIAL_STATE,
         accounts,
         transactions: [existingTransaction],
