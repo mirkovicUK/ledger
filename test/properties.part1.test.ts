@@ -1,13 +1,11 @@
+import { describe, test, expect } from 'vitest';
 import { computeBudgetSpending } from '../src/lib/budget.js';
 import { periodStart, periodEnd, isWithinRange } from '../src/lib/date.js';
 import { applyFilters } from '../src/lib/filter.js';
 import { exportToJSON, importFromJSON } from '../src/lib/storage.js';
 import { sortTransactions } from '../src/lib/sort.js';
 import { expandRule } from '../src/lib/recurring.js';
-import { ledgerReducer, INITIAL_STATE } from '../src/lib/ledgerReducer.js';
-import { describe, test, expect } from 'vitest';
-import type { Budget, Transaction } from '../src/lib/types.js';
-import { parseDate } from '../src/lib/date.js';
+import type { Budget } from '../src/lib/types.js';
 
 // ---------------------------------------------------------------------------
 // Property 3: Budget spending equals sum of matching transactions in period
@@ -17,7 +15,7 @@ import { parseDate } from '../src/lib/date.js';
 describe('Property 3: Budget spending equals sum of matching transactions in period', () => {
   // Fixed reference date used across all iterations
   const REF_DATE = '2024-06-15';
-  const PERIODS = ['weekly', 'monthly', 'yearly'];
+  const PERIODS: Array<'weekly' | 'monthly' | 'yearly'> = ['weekly', 'monthly', 'yearly'];
   const CATEGORIES = ['cat-food', 'cat-transport', 'cat-utilities'];
 
   /**
@@ -37,7 +35,7 @@ describe('Property 3: Budget spending equals sum of matching transactions in per
   /**
    * Pick a random item from an array.
    */
-  function pick(rng: () => number, arr: string[]) {
+  function pick<T>(rng: () => number, arr: T[]): T {
     return arr[Math.floor(rng() * arr.length)];
   }
 
@@ -45,7 +43,7 @@ describe('Property 3: Budget spending equals sum of matching transactions in per
    * Generate a YYYY-MM-DD string for a date that is `offsetDays` from
    * 2024-01-01 (±182 days around REF_DATE 2024-06-15, i.e. within 1 year).
    */
-  function randomDateString(rng: () => number) {
+  function randomDateString(rng: () => number): string {
     // 1-year window: 2024-01-01 to 2024-12-31 (366 days, 2024 is leap)
     const base = new Date('2024-01-01T00:00:00Z');
     const offsetDays = Math.floor(rng() * 366);
@@ -61,7 +59,7 @@ describe('Property 3: Budget spending equals sum of matching transactions in per
    * Amounts are in [-500, 1000]; categoryId is from CATEGORIES ∪ {null}.
    */
   function generateTransactions(rng: () => number, count: number) {
-    const txs: Transaction[] = [];
+    const txs = [];
     for (let i = 0; i < count; i++) {
       // Amount: rng() * 1500 − 500  →  [-500, 1000]
       const amount = rng() * 1500 - 500;
@@ -74,7 +72,6 @@ describe('Property 3: Budget spending equals sum of matching transactions in per
         date: randomDateString(rng),
         description: `tx ${i}`,
         categoryId,
-        recurringRuleId: null,
         createdAt: new Date().toISOString(),
       });
     }
@@ -85,7 +82,7 @@ describe('Property 3: Budget spending equals sum of matching transactions in per
    * Manually compute expected spending: filter by categoryId AND date within
    * period, then sum amounts.
    */
-  function manualSpending(budget: Pick<Budget, 'categoryId' | 'period'>, transactions: Transaction[], refDate: string) {
+  function manualSpending(budget: Pick<Budget, 'categoryId' | 'period'>, transactions: Array<{ categoryId: string | null | undefined; date: string; amount: number }>, refDate: string): number {
     const start = periodStart(refDate, budget.period);
     const end = periodEnd(refDate, budget.period);
     return transactions
@@ -106,12 +103,9 @@ describe('Property 3: Budget spending equals sum of matching transactions in per
       const period = pick(rng, PERIODS);
       const categoryId = pick(rng, CATEGORIES);
 
-      const budget = {
-        id: `budget-${i}`,
+      const budget: Pick<Budget, 'categoryId' | 'period'> = {
         categoryId,
-        limit: 500,
         period,
-        startDate: REF_DATE,
       };
 
       // 0–20 transactions
@@ -134,12 +128,9 @@ describe('Property 3: Budget spending equals sum of matching transactions in per
 
       const period = pick(rng, PERIODS);
       // Budget uses a category that never appears in transactions
-      const budget = {
-        id: `budget-zero-${i}`,
+      const budget: Pick<Budget, 'categoryId' | 'period'> = {
         categoryId: 'cat-nonexistent',
-        limit: 200,
         period,
-        startDate: REF_DATE,
       };
 
       const txCount = Math.floor(rng() * 21);
@@ -151,15 +142,17 @@ describe('Property 3: Budget spending equals sum of matching transactions in per
   });
 });
 
+import { ledgerReducer, INITIAL_STATE } from '../src/lib/ledgerReducer.js';
+
 // ---------------------------------------------------------------------------
 // Helpers for Property 2
 // ---------------------------------------------------------------------------
 
-function p2RandInt(min: number, max: number) {
+function p2RandInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function p2RandItem(arr: string[]) {
+function p2RandItem<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
@@ -167,11 +160,3 @@ function p2RandItem(arr: string[]) {
 // Property 2: Cascade delete removes account and all associated transactions
 // Validates: Requirements 1.4
 // ---------------------------------------------------------------------------
-
-
-// Placeholder for Property 2 tests (implementation to be added as needed)
-describe('Property 2: Cascade delete removes account and all associated transactions', () => {
-  test('placeholder test', () => {
-    expect(true).toBe(true);
-  });
-});
