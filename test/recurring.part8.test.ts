@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest';
+import { describe, test, expect } from 'vitest';
 import { expandRule, expandAllRules } from '../src/lib/recurring.js';
+import type { RecurringRule } from '../src/lib/types.js';
 
 // Simple deterministic ID generator for tests
 let idCounter = 0;
@@ -9,7 +10,7 @@ function makeIdGen() {
 }
 
 // Baseline rule factory
-function makeRule(overrides = {}) {
+function makeRule(overrides: Partial<RecurringRule> = {}): RecurringRule {
   return {
     id: 'rule-1',
     accountId: 'acct-1',
@@ -26,13 +27,13 @@ function makeRule(overrides = {}) {
 // ─── expandRule – correct dates per frequency ──────────────────────────────
 
 describe('expandRule – updatedRule.lastExpandedDate', () => {
-  it('is set to the last generated date after expansion', () => {
+  test('is set to the last generated date after expansion', () => {
     const rule = makeRule({ frequency: 'monthly', startDate: '2024-01-01' });
     const { updatedRule } = expandRule(rule, '2024-03-01', makeIdGen());
     expect(updatedRule.lastExpandedDate).toBe('2024-03-01');
   });
 
-  it('is set to referenceDate when startDate <= referenceDate but no transactions generated', () => {
+  test('is set to referenceDate when startDate <= referenceDate but no transactions generated', () => {
     // This only happens when lastExpandedDate === referenceDate (next date would exceed it)
     // Set lastExpandedDate so that next advance goes past referenceDate
     const rule = makeRule({
@@ -47,7 +48,7 @@ describe('expandRule – updatedRule.lastExpandedDate', () => {
     expect(updatedRule.lastExpandedDate).toBe('2024-03-15');
   });
 
-  it('is unchanged when startDate > referenceDate', () => {
+  test('is unchanged when startDate > referenceDate', () => {
     const rule = makeRule({
       frequency: 'monthly',
       startDate: '2025-06-01',
