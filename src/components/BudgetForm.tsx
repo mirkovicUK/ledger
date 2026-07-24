@@ -2,16 +2,19 @@ import { useState } from 'react';
 import { z } from 'zod';
 import type { Budget, Category } from '../lib/types.js';
 
-/**
- * BudgetForm — create or edit a budget.
- *
- * Props:
- *   categories     — array of { id, name }
- *   initialValues  — optional budget object for edit mode
- *                    { categoryId, limit, period, startDate }
- *   onSubmit(payload) — called with validated budget payload
- *   onCancel          — called when the user cancels
- */
+export interface BudgetFormPayload {
+  categoryId: string;
+  limit: number;
+  period: 'weekly' | 'monthly' | 'yearly';
+  startDate: string;
+}
+
+export interface BudgetFormProps {
+  categories?: Pick<Category, 'id' | 'name'>[];
+  initialValues?: Partial<Budget>;
+  onSubmit: (payload: BudgetFormPayload) => void;
+  onCancel: () => void;
+}
 
 // Validation schema for the form fields (id excluded — assigned by reducer)
 const BudgetFormSchema = z.object({
@@ -28,25 +31,20 @@ const BudgetFormSchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Start date must be a valid date (YYYY-MM-DD)'),
 });
 
-function today() {
+function today(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-export interface BudgetFormPayload {
-  categoryId: string;
-  limit: number;
-  period: 'weekly' | 'monthly' | 'yearly';
-  startDate: string;
+interface FieldErrors {
+  categoryId?: string;
+  limit?: string;
+  period?: string;
+  startDate?: string;
 }
 
-export interface BudgetFormProps {
-  categories?: Pick<Category, 'id' | 'name'>[];
-  initialValues?: Partial<Budget>;
-  onSubmit: (payload: BudgetFormPayload) => void;
-  onCancel: () => void;
-}
+export function BudgetForm(props: BudgetFormProps): React.JSX.Element {
+  const { categories = [], initialValues, onSubmit, onCancel } = props;
 
-export function BudgetForm({ categories = [], initialValues, onSubmit, onCancel }: BudgetFormProps): React.JSX.Element {
   const [fields, setFields] = useState({
     categoryId: initialValues?.categoryId ?? '',
     limit: initialValues?.limit != null ? String(initialValues.limit) : '',
@@ -54,13 +52,13 @@ export function BudgetForm({ categories = [], initialValues, onSubmit, onCancel 
     startDate: initialValues?.startDate ?? today(),
   });
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<FieldErrors>({});
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
     const { name, value } = e.target;
     setFields(prev => ({ ...prev, [name]: value }));
     // Clear the error for the field as the user edits it
-    if (errors[name]) {
+    if (errors[name as keyof FieldErrors]) {
       setErrors(prev => ({ ...prev, [name]: undefined }));
     }
   }
@@ -78,9 +76,9 @@ export function BudgetForm({ categories = [], initialValues, onSubmit, onCancel 
     const result = BudgetFormSchema.safeParse(raw);
 
     if (!result.success) {
-      const fieldErrors: Record<string, string> = {};
+      const fieldErrors: FieldErrors = {};
       for (const issue of result.error.issues) {
-        const key = issue.path[0] as string;
+        const key = issue.path[0] as keyof FieldErrors;
         if (key) fieldErrors[key] = issue.message;
       }
       setErrors(fieldErrors);
