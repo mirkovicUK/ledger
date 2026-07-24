@@ -1,13 +1,13 @@
-import { describe, it, expect } from 'vitest';
 import { applyFilters } from '../src/lib/filter.js';
+import { describe, it, expect } from 'vitest';
 
 // Sample transaction fixture
 const transactions = [
-  { id: '1', accountId: 'acct-a', categoryId: 'cat-food',  date: '2024-01-10', amount: 50 },
-  { id: '2', accountId: 'acct-a', categoryId: 'cat-rent',  date: '2024-01-15', amount: 1200 },
-  { id: '3', accountId: 'acct-b', categoryId: 'cat-food',  date: '2024-02-05', amount: 30 },
-  { id: '4', accountId: 'acct-b', categoryId: null,         date: '2024-02-20', amount: -100 },
-  { id: '5', accountId: 'acct-a', categoryId: undefined,    date: '2024-03-01', amount: 200 },
+  { id: '1', accountId: 'acct-a', categoryId: 'cat-food', date: '2024-01-10', amount: 50 },
+  { id: '2', accountId: 'acct-a', categoryId: 'cat-rent', date: '2024-01-15', amount: 1200 },
+  { id: '3', accountId: 'acct-b', categoryId: 'cat-food', date: '2024-02-05', amount: 30 },
+  { id: '4', accountId: 'acct-b', categoryId: null, date: '2024-02-20', amount: -100 },
+  { id: '5', accountId: 'acct-a', categoryId: undefined, date: '2024-03-01', amount: 200 },
 ];
 
 describe('applyFilters — null / empty criteria', () => {
