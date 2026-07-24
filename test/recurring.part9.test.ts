@@ -77,5 +77,3 @@ describe('expandRule – expansion from lastExpandedDate', () => {
 });
 
 // ─── Idempotence ────────────────────────────────────────────────────────────
-
-export { makeIdGen, makeRule };
