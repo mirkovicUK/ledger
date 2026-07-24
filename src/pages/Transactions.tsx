@@ -1,16 +1,15 @@
 import { useState } from 'react';
-import { useLedger } from '../hooks/useLedger';
+import { useLedger } from '../hooks/useLedger.jsx';
 import { useFilters } from '../hooks/useFilters.js';
 import { generateId } from '../lib/id.js';
-import { FilterBar } from '../components/FilterBar';
-import { AddTransaction } from '../components/AddTransaction';
-import { TransactionList } from '../components/TransactionList';
-import { AccountForm } from '../components/AccountForm';
-import styles from './Transactions.module.css';
+import { FilterBar } from '../components/FilterBar.jsx';
+import { AddTransaction } from '../components/AddTransaction.jsx';
+import { TransactionList } from '../components/TransactionList.jsx';
+import { AccountForm } from '../components/AccountForm.jsx';
 import type { Account, Transaction } from '../lib/types.js';
-import type { FilterCriteria } from '../lib/filter.js';
-import type { SortConfig } from '../lib/sort.js';
-import React from 'react';
+import type { AddTransactionPayload } from '../components/AddTransaction.jsx';
+import type { AccountFormProps } from '../components/AccountForm.jsx';
+import styles from './Transactions.module.css';
 
 /**
  * Transactions page — full transaction list with filter/sort, CRUD for
@@ -24,20 +23,14 @@ export default function Transactions(): React.JSX.Element {
     useFilters(state.transactions);
 
   // Local UI state
-  const [showAddTxForm, setShowAddTxForm] = useState(false);
+  const [showAddTxForm, setShowAddTxForm] = useState<boolean>(false);
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
-  const [showAccountForm, setShowAccountForm] = useState(false);
+  const [showAccountForm, setShowAccountForm] = useState<boolean>(false);
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
 
   // ── Transaction handlers ────────────────────────────────────────────────────
 
-  function handleAddTxSubmit(payload: {
-    amount: number;
-    date: string;
-    description: string;
-    accountId: string;
-    categoryId: string | null;
-  }): void {
+  function handleAddTxSubmit(payload: AddTransactionPayload) {
     dispatch({
       type: 'CREATE_TRANSACTION',
       payload: { ...payload, id: generateId(), createdAt: new Date().toISOString() },
@@ -45,39 +38,31 @@ export default function Transactions(): React.JSX.Element {
     setShowAddTxForm(false);
   }
 
-  function handleEditTxSubmit(payload: {
-    amount: number;
-    date: string;
-    description: string;
-    accountId: string;
-    categoryId: string | null;
-  }): void {
-    if (editingTx) {
-      dispatch({
-        type: 'EDIT_TRANSACTION',
-        payload: { ...editingTx, ...payload },
-      });
-      setEditingTx(null);
-    }
+  function handleEditTxSubmit(payload: AddTransactionPayload) {
+    dispatch({
+      type: 'EDIT_TRANSACTION',
+      payload: { ...editingTx, ...payload },
+    });
+    setEditingTx(null);
   }
 
-  function handleDeleteTx(id: string): void {
+  function handleDeleteTx(id: string) {
     dispatch({ type: 'DELETE_TRANSACTION', payload: { id } });
   }
 
-  function handleEditTxClick(transaction: Transaction): void {
+  function handleEditTxClick(transaction: Transaction) {
     setEditingTx(transaction);
     setShowAddTxForm(false);
   }
 
-  function handleCancelTxForm(): void {
+  function handleCancelTxForm() {
     setShowAddTxForm(false);
     setEditingTx(null);
   }
 
   // ── Account handlers ────────────────────────────────────────────────────────
 
-  function handleAddAccountSubmit(payload: Pick<Account, 'name' | 'type'>): void {
+  function handleAddAccountSubmit(payload: Pick<Account, 'name' | 'type'>) {
     dispatch({
       type: 'CREATE_ACCOUNT',
       payload: { ...payload, id: generateId(), createdAt: new Date().toISOString() },
@@ -85,26 +70,24 @@ export default function Transactions(): React.JSX.Element {
     setShowAccountForm(false);
   }
 
-  function handleEditAccountSubmit(payload: Pick<Account, 'name' | 'type'>): void {
-    if (editingAccount) {
-      dispatch({
-        type: 'EDIT_ACCOUNT',
-        payload: { ...editingAccount, ...payload },
-      });
-      setEditingAccount(null);
-    }
+  function handleEditAccountSubmit(payload: Pick<Account, 'name' | 'type'>) {
+    dispatch({
+      type: 'EDIT_ACCOUNT',
+      payload: { ...editingAccount, ...payload },
+    });
+    setEditingAccount(null);
   }
 
-  function handleDeleteAccount(id: string): void {
+  function handleDeleteAccount(id: string) {
     dispatch({ type: 'DELETE_ACCOUNT', payload: { id } });
   }
 
-  function handleEditAccountClick(account: Account): void {
+  function handleEditAccountClick(account: Account) {
     setEditingAccount(account);
     setShowAccountForm(false);
   }
 
-  function handleCancelAccountForm(): void {
+  function handleCancelAccountForm() {
     setShowAccountForm(false);
     setEditingAccount(null);
   }
@@ -112,15 +95,15 @@ export default function Transactions(): React.JSX.Element {
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <main className={styles.page} aria-label="Transactions">
+    <main className={styles['page']} aria-label="Transactions">
 
       {/* ── Accounts section ─────────────────────────────────────────────── */}
-      <section className={styles.section} aria-labelledby="accounts-heading">
-        <div className={styles.sectionHeader}>
-          <h2 id="accounts-heading" className={styles.sectionHeading}>Accounts</h2>
+      <section className={styles['section']} aria-labelledby="accounts-heading">
+        <div className={styles['sectionHeader']}>
+          <h2 id="accounts-heading" className={styles['sectionHeading']}>Accounts</h2>
           <button
             type="button"
-            className={styles.addButton}
+            className={styles['addButton']}
             onClick={() => {
               setShowAccountForm(v => !v);
               setEditingAccount(null);
@@ -133,7 +116,7 @@ export default function Transactions(): React.JSX.Element {
 
         {/* Add account form */}
         {showAccountForm && !editingAccount && (
-          <div className={styles.formPanel}>
+          <div className={styles['formPanel']}>
             <AccountForm
               onSubmit={handleAddAccountSubmit}
               onCancel={handleCancelAccountForm}
@@ -143,15 +126,15 @@ export default function Transactions(): React.JSX.Element {
 
         {/* Account list */}
         {state.accounts.length === 0 ? (
-          <p className={styles.emptyState} role="status">
+          <p className={styles['emptyState']} role="status">
             No accounts yet. Add one to get started.
           </p>
         ) : (
-          <ul className={styles.accountList} aria-label="Accounts list">
+          <ul className={styles['accountList']} aria-label="Accounts list">
             {state.accounts.map(account => (
-              <li key={account.id} className={styles.accountItem}>
+              <li key={account.id} className={styles['accountItem']}>
                 {editingAccount?.id === account.id ? (
-                  <div className={styles.formPanel}>
+                  <div className={styles['formPanel']}>
                     <AccountForm
                       initialValues={editingAccount}
                       onSubmit={handleEditAccountSubmit}
@@ -160,9 +143,9 @@ export default function Transactions(): React.JSX.Element {
                   </div>
                 ) : (
                   <>
-                    <span className={styles.accountName}>{account.name}</span>
-                    <span className={styles.accountType}>{account.type}</span>
-                    <div className={styles.rowActions}>
+                    <span className={styles['accountName']}>{account.name}</span>
+                    <span className={styles['accountType']}>{account.type}</span>
+                    <div className={styles['rowActions']}>
                       <button
                         type="button"
                         onClick={() => handleEditAccountClick(account)}
@@ -187,12 +170,12 @@ export default function Transactions(): React.JSX.Element {
       </section>
 
       {/* ── Transactions section ──────────────────────────────────────────── */}
-      <section className={styles.section} aria-labelledby="transactions-heading">
-        <div className={styles.sectionHeader}>
-          <h2 id="transactions-heading" className={styles.sectionHeading}>Transactions</h2>
+      <section className={styles['section']} aria-labelledby="transactions-heading">
+        <div className={styles['sectionHeader']}>
+          <h2 id="transactions-heading" className={styles['sectionHeading']}>Transactions</h2>
           <button
             type="button"
-            className={styles.addButton}
+            className={styles['addButton']}
             onClick={() => {
               setShowAddTxForm(v => !v);
               setEditingTx(null);
@@ -217,7 +200,7 @@ export default function Transactions(): React.JSX.Element {
 
         {/* Add transaction form */}
         {showAddTxForm && !editingTx && (
-          <div className={styles.formPanel}>
+          <div className={styles['formPanel']}>
             <AddTransaction
               accounts={state.accounts}
               categories={state.categories}
@@ -229,7 +212,7 @@ export default function Transactions(): React.JSX.Element {
 
         {/* Edit transaction form — shown inline above the list */}
         {editingTx && (
-          <div className={styles.formPanel}>
+          <div className={styles['formPanel']}>
             <AddTransaction
               accounts={state.accounts}
               categories={state.categories}
