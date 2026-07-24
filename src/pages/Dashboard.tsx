@@ -4,14 +4,14 @@ import Summary from '../components/Summary';
 import TransactionList from '../components/TransactionList';
 import BudgetBar from '../components/BudgetBar';
 import styles from './Dashboard.module.css';
-import type { ReactElement } from 'react';
+import type React from 'react';
 
 /**
  * Dashboard page — shows balance summary, recent transactions, and active budgets.
  *
  * Requirements: 7.1, 7.2, 7.3, 7.4, 7.5
  */
-export default function Dashboard(): ReactElement {
+export default function Dashboard(): React.JSX.Element {
   const { state, totalBalance, accountBalances } = useLedger();
   const budgetProgress = useBudgets(state);
 
