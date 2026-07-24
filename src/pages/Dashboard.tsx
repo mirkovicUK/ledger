@@ -1,16 +1,17 @@
-import { useLedger } from '../hooks/useLedger.jsx';
+import { useLedger } from '../hooks/useLedger';
 import { useBudgets } from '../hooks/useBudgets.js';
-import Summary from '../components/Summary.jsx';
-import TransactionList from '../components/TransactionList.jsx';
-import BudgetBar from '../components/BudgetBar.jsx';
+import Summary from '../components/Summary';
+import TransactionList from '../components/TransactionList';
+import BudgetBar from '../components/BudgetBar';
 import styles from './Dashboard.module.css';
+import type { ReactElement } from 'react';
 
 /**
  * Dashboard page — shows balance summary, recent transactions, and active budgets.
  *
  * Requirements: 7.1, 7.2, 7.3, 7.4, 7.5
  */
-export default function Dashboard(): React.JSX.Element {
+export default function Dashboard(): ReactElement {
   const { state, totalBalance, accountBalances } = useLedger();
   const budgetProgress = useBudgets(state);
 
@@ -26,21 +27,19 @@ export default function Dashboard(): React.JSX.Element {
   // No-op handlers — Dashboard is read-only
   const noop = () => {};
 
-  const css = styles as Record<string, string>;
-
   return (
-    <main className={css['page']} aria-label="Dashboard">
+    <main className={styles.page} aria-label="Dashboard">
       {showOnboarding && (
-        <section className={css['onboarding']} aria-live="polite">
-          <p className={css['onboardingText']}>
+        <section className={styles.onboarding} aria-live="polite">
+          <p className={styles.onboardingText}>
             Get started by adding your first account
           </p>
         </section>
       )}
 
       {/* Balance summary */}
-      <section className={css['section']} aria-labelledby="summary-heading">
-        <h2 id="summary-heading" className={css['sectionHeading']}>Balances</h2>
+      <section className={styles.section} aria-labelledby="summary-heading">
+        <h2 id="summary-heading" className={styles.sectionHeading}>Balances</h2>
         <Summary
           totalBalance={totalBalance}
           accountBalances={accountBalances}
@@ -49,8 +48,8 @@ export default function Dashboard(): React.JSX.Element {
       </section>
 
       {/* Recent transactions */}
-      <section className={css['section']} aria-labelledby="recent-heading">
-        <h2 id="recent-heading" className={css['sectionHeading']}>Recent Transactions</h2>
+      <section className={styles.section} aria-labelledby="recent-heading">
+        <h2 id="recent-heading" className={styles.sectionHeading}>Recent Transactions</h2>
         <TransactionList
           transactions={recentTransactions}
           categories={state.categories}
@@ -61,9 +60,9 @@ export default function Dashboard(): React.JSX.Element {
 
       {/* Active budgets */}
       {budgetProgress.length > 0 && (
-        <section className={css['section']} aria-labelledby="budgets-heading">
-          <h2 id="budgets-heading" className={css['sectionHeading']}>Budgets</h2>
-          <div className={css['budgetGrid']}>
+        <section className={styles.section} aria-labelledby="budgets-heading">
+          <h2 id="budgets-heading" className={styles.sectionHeading}>Budgets</h2>
+          <div className={styles.budgetGrid}>
             {budgetProgress.map(budget => {
               const category = state.categories.find(c => c.id === budget.categoryId);
               return (
