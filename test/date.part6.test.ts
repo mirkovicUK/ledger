@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, test, expect } from 'vitest';
 import {
   parseDate,
   formatDate,
@@ -8,11 +8,13 @@ import {
   periodEnd,
 } from '../src/lib/date.js';
 
+type Period = 'weekly' | 'monthly' | 'yearly';
+
 // ---------------------------------------------------------------------------
 // parseDate / formatDate roundtrip
 // ---------------------------------------------------------------------------
 describe('periodStart and periodEnd consistency', () => {
-  const testCases = [
+  const testCases: Array<{ date: string; period: Period }> = [
     { date: '2024-03-15', period: 'monthly' },
     { date: '2024-06-01', period: 'monthly' },
     { date: '2024-12-31', period: 'monthly' },
@@ -20,7 +22,7 @@ describe('periodStart and periodEnd consistency', () => {
     { date: '2024-03-15', period: 'weekly' },
   ];
 
-  it.each(testCases)(
+  test.each(testCases)(
     'start is not after end for period=$period date=$date',
     ({ date, period }) => {
       const start = periodStart(date, period);
@@ -29,7 +31,7 @@ describe('periodStart and periodEnd consistency', () => {
     }
   );
 
-  it.each(testCases)(
+  test.each(testCases)(
     'reference date falls within its own period for period=$period date=$date',
     ({ date, period }) => {
       const start = periodStart(date, period);
