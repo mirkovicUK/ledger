@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
 import { sumAmounts, accountBalance, totalBalance, budgetRatio } from '../src/lib/money.js';
+import { describe, it, expect } from 'vitest';
 
 describe('sumAmounts', () => {
   it('returns 0 for an empty array', () => {
