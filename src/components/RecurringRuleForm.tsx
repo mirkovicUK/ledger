@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import type { Account, Category, RecurringRule } from '../lib/types.js';
 import { RecurringRuleSchema } from '../lib/types.js';
+import type { Account, Category, RecurringRule } from '../lib/types.js';
 
 export interface RecurringRuleFormPayload {
   id?: string;
@@ -30,19 +30,25 @@ export function RecurringRuleForm(props: RecurringRuleFormProps): React.JSX.Elem
     onCancel,
   } = props;
 
-  const [description, setDescription] = useState(initialValues?.description ?? '');
-  const [amount, setAmount] = useState(
+  // ── form state ────────────────────────────────────────────────────────────
+
+  const [description, setDescription] = useState<string>(initialValues?.description ?? '');
+  const [amount, setAmount] = useState<string>(
     initialValues?.amount !== undefined ? String(initialValues.amount) : ''
   );
-  const [accountId, setAccountId] = useState(initialValues?.accountId ?? '');
-  const [categoryId, setCategoryId] = useState(initialValues?.categoryId ?? '');
-  const [frequency, setFrequency] = useState(initialValues?.frequency ?? 'monthly');
-  const [startDate, setStartDate] = useState(initialValues?.startDate ?? '');
+  const [accountId, setAccountId] = useState<string>(initialValues?.accountId ?? '');
+  const [categoryId, setCategoryId] = useState<string>(initialValues?.categoryId ?? '');
+  const [frequency, setFrequency] = useState<'daily' | 'weekly' | 'biweekly' | 'monthly' | 'yearly'>(
+    (initialValues?.frequency as 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'yearly') ?? 'monthly'
+  );
+  const [startDate, setStartDate] = useState<string>(initialValues?.startDate ?? '');
 
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [submitted, setSubmitted] = useState(false);
+  const [submitted, setSubmitted] = useState<boolean>(false);
 
-  function validate() {
+  // ── validation ────────────────────────────────────────────────────────────
+
+  function validate(): { valid: boolean; errors: Record<string, string>; data: RecurringRuleFormPayload | null } {
     const payload = {
       ...(initialValues?.id ? { id: initialValues.id } : {}),
       description,
@@ -63,35 +69,55 @@ export function RecurringRuleForm(props: RecurringRuleFormProps): React.JSX.Elem
       const fieldErrors: Record<string, string> = {};
       for (const issue of result.error.issues) {
         const field = issue.path[0];
-        if (field) fieldErrors[field] = issue.message;
+        if (field) fieldErrors[String(field)] = issue.message;
       }
       return { valid: false, errors: fieldErrors, data: null };
     }
 
-    return { valid: true, errors: {}, data: result.data };
+    const data: RecurringRuleFormPayload = {
+      ...(result.data.id ? { id: result.data.id } : {}),
+      accountId: result.data.accountId,
+      amount: result.data.amount,
+      description: result.data.description,
+      categoryId: result.data.categoryId ?? null,
+      frequency: result.data.frequency,
+      startDate: result.data.startDate,
+      ...(result.data.lastExpandedDate !== undefined
+        ? { lastExpandedDate: result.data.lastExpandedDate }
+        : {}),
+    };
+
+    return { valid: true, errors: {}, data };
   }
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  // ── handlers ──────────────────────────────────────────────────────────────
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>): void {
     e.preventDefault();
     setSubmitted(true);
 
     const { valid, errors: validationErrors, data } = validate();
     setErrors(validationErrors);
 
-    if (valid) {
+    if (valid && data !== null) {
       onSubmit(data);
     }
   }
 
-  function revalidate() {
+  // Re-validate on change after first submit attempt
+  function revalidate(): void {
     if (submitted) {
       const { errors: validationErrors } = validate();
       setErrors(validationErrors);
     }
   }
 
+  // ── derived state ─────────────────────────────────────────────────────────
+
   const hasErrors = Object.keys(errors).length > 0;
   const isEditMode = Boolean(initialValues?.id);
+
+  // ── render ────────────────────────────────────────────────────────────────
 
   return (
     <form onSubmit={handleSubmit} noValidate aria-label={isEditMode ? 'Edit recurring rule' : 'Add recurring rule'}>
@@ -103,7 +129,7 @@ export function RecurringRuleForm(props: RecurringRuleFormProps): React.JSX.Elem
             id="rrf-description"
             type="text"
             value={description}
-            onChange={e => { setDescription(e.target.value); revalidate(); }}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setDescription(e.target.value); revalidate(); }}
             placeholder="e.g. Monthly rent"
             aria-describedby={errors.description ? 'rrf-description-error' : undefined}
             aria-invalid={Boolean(errors.description)}
@@ -125,7 +151,7 @@ export function RecurringRuleForm(props: RecurringRuleFormProps): React.JSX.Elem
             type="number"
             step="any"
             value={amount}
-            onChange={e => { setAmount(e.target.value); revalidate(); }}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setAmount(e.target.value); revalidate(); }}
             placeholder="e.g. -1200 or 500"
             aria-describedby={errors.amount ? 'rrf-amount-error' : undefined}
             aria-invalid={Boolean(errors.amount)}
@@ -145,7 +171,7 @@ export function RecurringRuleForm(props: RecurringRuleFormProps): React.JSX.Elem
           <select
             id="rrf-account"
             value={accountId}
-            onChange={e => { setAccountId(e.target.value); revalidate(); }}
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => { setAccountId(e.target.value); revalidate(); }}
             aria-describedby={errors.accountId ? 'rrf-account-error' : undefined}
             aria-invalid={Boolean(errors.accountId)}
           >
@@ -169,7 +195,7 @@ export function RecurringRuleForm(props: RecurringRuleFormProps): React.JSX.Elem
           <select
             id="rrf-category"
             value={categoryId}
-            onChange={e => { setCategoryId(e.target.value); revalidate(); }}
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => { setCategoryId(e.target.value); revalidate(); }}
           >
             <option value="">Uncategorized</option>
             {categories.map(cat => (
@@ -186,7 +212,10 @@ export function RecurringRuleForm(props: RecurringRuleFormProps): React.JSX.Elem
           <select
             id="rrf-frequency"
             value={frequency}
-            onChange={e => { setFrequency(e.target.value); revalidate(); }}
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+              setFrequency(e.target.value as 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'yearly');
+              revalidate();
+            }}
             aria-describedby={errors.frequency ? 'rrf-frequency-error' : undefined}
             aria-invalid={Boolean(errors.frequency)}
           >
@@ -212,7 +241,7 @@ export function RecurringRuleForm(props: RecurringRuleFormProps): React.JSX.Elem
             id="rrf-start-date"
             type="date"
             value={startDate}
-            onChange={e => { setStartDate(e.target.value); revalidate(); }}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setStartDate(e.target.value); revalidate(); }}
             aria-describedby={errors.startDate ? 'rrf-start-date-error' : undefined}
             aria-invalid={Boolean(errors.startDate)}
           />
