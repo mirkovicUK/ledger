@@ -5,7 +5,7 @@ import { applyFilters } from '../src/lib/filter.js';
 import { exportToJSON, importFromJSON } from '../src/lib/storage.js';
 import { sortTransactions } from '../src/lib/sort.js';
 import { expandRule } from '../src/lib/recurring.js';
-import type { Budget } from '../src/lib/types.js';
+import type { Budget, Transaction } from '../src/lib/types.js';
 
 // ---------------------------------------------------------------------------
 // Property 3: Budget spending equals sum of matching transactions in period
@@ -22,7 +22,7 @@ describe('Property 3: Budget spending equals sum of matching transactions in per
    * Deterministic pseudo-random number generator (mulberry32) seeded per
    * iteration, so failures are reproducible.
    */
-  function makePrng(seed: number) {
+  function makePrng(seed: number): () => number {
     let s = seed >>> 0;
     return function () {
       s += 0x6d2b79f5;
@@ -54,17 +54,24 @@ describe('Property 3: Budget spending equals sum of matching transactions in per
     return `${yyyy}-${mm}-${dd}`;
   }
 
+  type TxPick = Pick<Transaction, 'categoryId' | 'date' | 'amount'> & {
+    id: string;
+    accountId: string;
+    description: string;
+    createdAt: string;
+  };
+
   /**
    * Generate between 0 and 20 random transactions.
    * Amounts are in [-500, 1000]; categoryId is from CATEGORIES ∪ {null}.
    */
-  function generateTransactions(rng: () => number, count: number) {
-    const txs = [];
+  function generateTransactions(rng: () => number, count: number): TxPick[] {
+    const txs: TxPick[] = [];
     for (let i = 0; i < count; i++) {
       // Amount: rng() * 1500 − 500  →  [-500, 1000]
       const amount = rng() * 1500 - 500;
       // 1/4 chance of null category to exercise the zero-spend edge case
-      const categoryId = rng() < 0.25 ? null : pick(rng, CATEGORIES);
+      const categoryId: string | null = rng() < 0.25 ? null : pick(rng, CATEGORIES);
       txs.push({
         id: `tx-${i}`,
         accountId: 'acc-1',
@@ -82,7 +89,7 @@ describe('Property 3: Budget spending equals sum of matching transactions in per
    * Manually compute expected spending: filter by categoryId AND date within
    * period, then sum amounts.
    */
-  function manualSpending(budget: Pick<Budget, 'categoryId' | 'period'>, transactions: Array<{ categoryId: string | null | undefined; date: string; amount: number }>, refDate: string): number {
+  function manualSpending(budget: Pick<Budget, 'categoryId' | 'period'>, transactions: TxPick[], refDate: string): number {
     const start = periodStart(refDate, budget.period);
     const end = periodEnd(refDate, budget.period);
     return transactions
