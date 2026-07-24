@@ -5,7 +5,8 @@ import { applyFilters } from '../src/lib/filter.js';
 import { exportToJSON, importFromJSON } from '../src/lib/storage.js';
 import { sortTransactions } from '../src/lib/sort.js';
 import { expandRule } from '../src/lib/recurring.js';
-import { ledgerReducer, INITIAL_STATE } from '../src/lib/ledgerReducer.js';
+import { INITIAL_STATE, ledgerReducer } from '../src/lib/ledgerReducer.js';
+import type { Account, Transaction } from '../src/lib/types.js';
 
 // ---------------------------------------------------------------------------
 // Helper utilities
@@ -21,7 +22,6 @@ function p2RandItem<T>(arr: T[]): T {
 
 // ---------------------------------------------------------------------------
 // Property 2: Cascade delete removes account and all associated transactions
-// Validates: Requirements 4.4, 4.5
 // ---------------------------------------------------------------------------
 
 describe('Property 2: Cascade delete removes account and all associated transactions', () => {
@@ -29,9 +29,9 @@ describe('Property 2: Cascade delete removes account and all associated transact
     for (let iteration = 0; iteration < 100; iteration++) {
       // Build state with 1-4 accounts
       const accountCount = p2RandInt(1, 4);
-      const accounts = [];
+      const accounts: Account[] = [];
       for (let i = 0; i < accountCount; i++) {
-        const types = ['checking', 'savings', 'credit', 'cash', 'investment'] as const;
+        const types: Array<'checking' | 'savings' | 'credit' | 'cash' | 'investment'> = ['checking', 'savings', 'credit', 'cash', 'investment'];
         accounts.push({
           id: `acc-p2-${iteration}-${i}`,
           name: `Account ${i}`,
@@ -42,7 +42,7 @@ describe('Property 2: Cascade delete removes account and all associated transact
 
       // Build 5-15 transactions assigned to random accounts
       const txnCount = p2RandInt(5, 15);
-      const transactions = [];
+      const transactions: Transaction[] = [];
       for (let j = 0; j < txnCount; j++) {
         const account = p2RandItem(accounts);
         transactions.push({
