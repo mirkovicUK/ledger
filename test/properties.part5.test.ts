@@ -82,13 +82,7 @@ describe('Property 10: Export/import roundtrip preserves all data', () => {
    *  - 0–2 budgets (referencing generated categories)
    *  - 0–2 recurring rules (referencing generated accounts)
    */
-  function generateAppState(rng: () => number, iteration: number): {
-    accounts: { id: string; name: string; type: 'checking' | 'savings' | 'credit' | 'cash' | 'investment'; createdAt: string; }[];
-    transactions: { id: string; accountId: string; amount: number; date: string; description: string; categoryId: string | null; recurringRuleId: null; createdAt: string; }[];
-    categories: { id: string; name: string; }[];
-    budgets: { id: string; categoryId: string; limit: number; period: 'weekly' | 'monthly' | 'yearly'; startDate: string; }[];
-    recurringRules: { id: string; accountId: string; amount: number; description: string; categoryId: string | null; frequency: 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'yearly'; startDate: string; lastExpandedDate: string | null; }[];
-  } {
+  function generateAppState(rng: () => number, iteration: number) {
     // --- accounts ---
     const accountCount = randInt(rng, 1, 3);
     const accounts = [];
