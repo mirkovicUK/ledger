@@ -1,10 +1,6 @@
-import { computeBudgetSpending } from '../src/lib/budget.js';
-import { periodStart, periodEnd, isWithinRange } from '../src/lib/date.js';
-import { applyFilters } from '../src/lib/filter.js';
-import { exportToJSON, importFromJSON } from '../src/lib/storage.js';
-import { sortTransactions } from '../src/lib/sort.js';
-import { expandRule } from '../src/lib/recurring.js';
 import { describe, test, expect } from 'vitest';
+import { expandRule } from '../src/lib/recurring.js';
+import type { RecurringRule } from '../src/lib/types.js';
 
 // ---------------------------------------------------------------------------
 // Property 3: Budget spending equals sum of matching transactions in period
@@ -21,7 +17,7 @@ describe('Property 6: Recurring rule expansion is idempotent', () => {
    * **Validates: Requirements 5.3**
    */
 
-  const FREQUENCIES = ['daily', 'weekly', 'biweekly', 'monthly', 'yearly'];
+  const FREQUENCIES: RecurringRule['frequency'][] = ['daily', 'weekly', 'biweekly', 'monthly', 'yearly'];
 
   function p6Pad(n: number): string {
     return String(n).padStart(2, '0');
@@ -85,7 +81,7 @@ describe('Property 6: Recurring rule expansion is idempotent', () => {
       // Random reference date in 2024
       const refDate = randomRefDate(rng);
 
-      const rule = {
+      const rule: RecurringRule = {
         id: `rule-p6-${i}`,
         accountId: 'acc-p6',
         amount: parseFloat((rng() * 200 - 50).toFixed(2)),
