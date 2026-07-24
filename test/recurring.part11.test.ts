@@ -1,5 +1,7 @@
-import { describe, it, expect } from 'vitest';
 import { expandRule, expandAllRules } from '../src/lib/recurring.js';
+import type { Transaction, RecurringRule } from '../src/lib/types.js';
+import { generateId } from '../src/lib/id.js';
+import { describe, it, expect } from 'vitest';
 
 // Simple deterministic ID generator for tests
 let idCounter = 0;
@@ -9,7 +11,7 @@ function makeIdGen() {
 }
 
 // Baseline rule factory
-function makeRule(overrides = {}) {
+function makeRule(overrides: Partial<RecurringRule> = {}): RecurringRule {
   return {
     id: 'rule-1',
     accountId: 'acct-1',
@@ -23,12 +25,12 @@ function makeRule(overrides = {}) {
   };
 }
 
-// ─── expandRule – correct dates per frequency ──────────────────────────────
+// ─── expandAllRules – correct dates per frequency ──────────────────────────────
 
 describe('expandAllRules', () => {
   it('merges new transactions with existing ones', () => {
     const rules = [makeRule({ frequency: 'monthly', startDate: '2024-01-01' })];
-    const existing = [{ id: 'old-1', accountId: 'acct-x', amount: 5, date: '2023-12-01' }];
+    const existing: Transaction[] = [{ id: 'old-1', accountId: 'acct-x', amount: 5, date: '2023-12-01', description: 'Old tx', categoryId: null, recurringRuleId: null, createdAt: new Date().toISOString() }];
 
     const { transactions } = expandAllRules(rules, existing, '2024-02-01', makeIdGen());
 
@@ -67,7 +69,7 @@ describe('expandAllRules', () => {
   });
 
   it('handles an empty rules array', () => {
-    const existing = [{ id: 'e1', amount: 10, date: '2024-01-01' }];
+    const existing: Transaction[] = [{ id: 'e1', accountId: 'acct-1', amount: 10, date: '2024-01-01', description: 'Existing', categoryId: null, recurringRuleId: null, createdAt: new Date().toISOString() }];
     const { transactions, updatedRules } = expandAllRules([], existing, '2024-06-01', makeIdGen());
     expect(transactions).toHaveLength(1);
     expect(updatedRules).toHaveLength(0);
