@@ -1,16 +1,16 @@
-import { sortTransactions } from '../src/lib/sort.js';
 import { describe, it, expect } from 'vitest';
+import { sortTransactions } from '../src/lib/sort.js';
 
 // Sample transaction fixtures
 const transactions = [
-  { id: '1', date: '2024-03-15', amount: 200,  description: 'Groceries' },
-  { id: '2', date: '2024-01-05', amount: -50,  description: 'Amazon' },
+  { id: '1', date: '2024-03-15', amount: 200, description: 'Groceries' },
+  { id: '2', date: '2024-01-05', amount: -50, description: 'Amazon' },
   { id: '3', date: '2024-02-20', amount: 1200, description: 'Rent' },
-  { id: '4', date: '2024-01-05', amount: 75,   description: 'Coffee' },
-  { id: '5', date: '2024-04-01', amount: -300,  description: 'Utilities' },
+  { id: '4', date: '2024-01-05', amount: 75, description: 'Coffee' },
+  { id: '5', date: '2024-04-01', amount: -300, description: 'Utilities' },
 ];
 
-// ─── Immutability ────────────────────────────────────────────────────────────────
+// ─── Immutability ────────────────────────────────────────────────────────────
 
 describe('sortTransactions — immutability', () => {
   it('does not mutate the input array', () => {
@@ -170,7 +170,7 @@ describe('sortTransactions — edge cases', () => {
   it('handles missing description field gracefully (treated as empty string)', () => {
     const withMissing = [
       { id: 'a', date: '2024-01-01', amount: 10, description: 'Zebra' },
-      { id: 'b', date: '2024-01-02', amount: 20 },  // no description
+      { id: 'b', date: '2024-01-02', amount: 20 },
     ];
     const result = sortTransactions(withMissing, { field: 'description', direction: 'asc' });
     // empty string ('') sorts before 'Zebra'
