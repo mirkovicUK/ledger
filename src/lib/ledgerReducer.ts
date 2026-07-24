@@ -6,9 +6,13 @@ import {
   RecurringRuleSchema,
   AppStateSchema,
 } from './types.js';
+import type { AppState } from './types.js';
 import { generateId } from './id.js';
 import { expandAllRules } from './recurring.js';
-import type { AppState } from './types.js';
+
+// ---------------------------------------------------------------------------
+// Action interface
+// ---------------------------------------------------------------------------
 
 export interface LedgerAction {
   type: string;
@@ -39,10 +43,11 @@ export function ledgerReducer(state: AppState, action: LedgerAction): AppState {
 
     case 'CREATE_ACCOUNT': {
       try {
+        const payload = action.payload as Record<string, unknown>;
         const account = AccountSchema.parse({
           id: generateId(),
           createdAt: new Date().toISOString(),
-          ...action.payload,
+          ...payload,
         });
         return { ...state, accounts: [...state.accounts, account] };
       } catch {
@@ -78,14 +83,15 @@ export function ledgerReducer(state: AppState, action: LedgerAction): AppState {
 
     case 'CREATE_TRANSACTION': {
       try {
+        const payload = action.payload as Record<string, unknown>;
         // Referential integrity: accountId must exist
-        const accountExists = state.accounts.some((a) => a.id === (action.payload as { accountId: string }).accountId);
+        const accountExists = state.accounts.some((a) => a.id === payload.accountId);
         if (!accountExists) return state;
 
         const transaction = TransactionSchema.parse({
           id: generateId(),
           createdAt: new Date().toISOString(),
-          ...action.payload,
+          ...payload,
         });
         return { ...state, transactions: [...state.transactions, transaction] };
       } catch {
@@ -95,11 +101,12 @@ export function ledgerReducer(state: AppState, action: LedgerAction): AppState {
 
     case 'EDIT_TRANSACTION': {
       try {
+        const payload = action.payload as Record<string, unknown>;
         // Referential integrity: accountId must exist
-        const accountExists = state.accounts.some((a) => a.id === (action.payload as { accountId: string }).accountId);
+        const accountExists = state.accounts.some((a) => a.id === payload.accountId);
         if (!accountExists) return state;
 
-        const transaction = TransactionSchema.parse(action.payload);
+        const transaction = TransactionSchema.parse(payload);
         return {
           ...state,
           transactions: state.transactions.map((t) =>
@@ -125,9 +132,10 @@ export function ledgerReducer(state: AppState, action: LedgerAction): AppState {
 
     case 'CREATE_CATEGORY': {
       try {
+        const payload = action.payload as Record<string, unknown>;
         const category = CategorySchema.parse({
           id: generateId(),
-          ...action.payload,
+          ...payload,
         });
         return { ...state, categories: [...state.categories, category] };
       } catch {
@@ -149,9 +157,10 @@ export function ledgerReducer(state: AppState, action: LedgerAction): AppState {
 
     case 'CREATE_BUDGET': {
       try {
+        const payload = action.payload as Record<string, unknown>;
         const budget = BudgetSchema.parse({
           id: generateId(),
-          ...action.payload,
+          ...payload,
         });
         return { ...state, budgets: [...state.budgets, budget] };
       } catch {
@@ -185,10 +194,11 @@ export function ledgerReducer(state: AppState, action: LedgerAction): AppState {
 
     case 'CREATE_RECURRING_RULE': {
       try {
+        const payload = action.payload as Record<string, unknown>;
         const rule = RecurringRuleSchema.parse({
           id: generateId(),
           lastExpandedDate: null,
-          ...action.payload,
+          ...payload,
         });
         return { ...state, recurringRules: [...state.recurringRules, rule] };
       } catch {
