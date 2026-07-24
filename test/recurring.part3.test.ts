@@ -9,7 +9,7 @@ function makeIdGen() {
 }
 
 // Baseline rule factory
-function makeRule(overrides = {}) {
+function makeRule(overrides: Record<string, any> = {}) {
   return {
     id: 'rule-1',
     accountId: 'acct-1',
