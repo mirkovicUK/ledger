@@ -1,10 +1,10 @@
-import { describe, test, expect } from 'vitest';
 import { computeBudgetSpending } from '../src/lib/budget.js';
 import { periodStart, periodEnd, isWithinRange } from '../src/lib/date.js';
 import { applyFilters } from '../src/lib/filter.js';
 import { exportToJSON, importFromJSON } from '../src/lib/storage.js';
 import { sortTransactions } from '../src/lib/sort.js';
 import { expandRule } from '../src/lib/recurring.js';
+import { describe, test, expect } from 'vitest';
 
 // ---------------------------------------------------------------------------
 // Property 3: Budget spending equals sum of matching transactions in period
