@@ -1,7 +1,27 @@
-import { AccountSchema, TransactionSchema, CategorySchema, BudgetSchema, RecurringRuleSchema, AppStateSchema } from './types.js';
+import {
+  AccountSchema,
+  TransactionSchema,
+  CategorySchema,
+  BudgetSchema,
+  RecurringRuleSchema,
+  AppStateSchema,
+} from './types.js';
+import type { AppState } from './types.js';
 import { generateId } from './id.js';
 import { expandAllRules } from './recurring.js';
-import type { AppState } from './types.js';
+
+// ---------------------------------------------------------------------------
+// Public contract
+// ---------------------------------------------------------------------------
+
+export interface LedgerAction {
+  type: string;
+  payload?: unknown;
+}
+
+// ---------------------------------------------------------------------------
+// Initial State
+// ---------------------------------------------------------------------------
 
 export const INITIAL_STATE: AppState = {
   accounts: [],
@@ -11,19 +31,23 @@ export const INITIAL_STATE: AppState = {
   recurringRules: [],
 };
 
-export interface LedgerAction {
-  type: string;
-  payload?: unknown;
-}
+// ---------------------------------------------------------------------------
+// Reducer
+// ---------------------------------------------------------------------------
 
 export function ledgerReducer(state: AppState, action: LedgerAction): AppState {
   switch (action.type) {
+    // -----------------------------------------------------------------------
+    // Account actions
+    // -----------------------------------------------------------------------
+
     case 'CREATE_ACCOUNT': {
       try {
+        const payload = action.payload as Record<string, unknown>;
         const account = AccountSchema.parse({
           id: generateId(),
           createdAt: new Date().toISOString(),
-          ...action.payload,
+          ...payload,
         });
         return { ...state, accounts: [...state.accounts, account] };
       } catch {
@@ -52,16 +76,20 @@ export function ledgerReducer(state: AppState, action: LedgerAction): AppState {
       };
     }
 
+    // -----------------------------------------------------------------------
+    // Transaction actions
+    // -----------------------------------------------------------------------
+
     case 'CREATE_TRANSACTION': {
       try {
-        if (!action.payload || typeof action.payload !== 'object' || !('accountId' in action.payload)) return state;
-        const accountExists = state.accounts.some((a) => a.id === action.payload.accountId);
+        const payload = action.payload as Record<string, unknown>;
+        const accountExists = state.accounts.some((a) => a.id === payload.accountId);
         if (!accountExists) return state;
 
         const transaction = TransactionSchema.parse({
           id: generateId(),
           createdAt: new Date().toISOString(),
-          ...action.payload,
+          ...payload,
         });
         return { ...state, transactions: [...state.transactions, transaction] };
       } catch {
@@ -71,11 +99,11 @@ export function ledgerReducer(state: AppState, action: LedgerAction): AppState {
 
     case 'EDIT_TRANSACTION': {
       try {
-        if (!action.payload || typeof action.payload !== 'object' || !('accountId' in action.payload)) return state;
-        const accountExists = state.accounts.some((a) => a.id === action.payload.accountId);
+        const payload = action.payload as Record<string, unknown>;
+        const accountExists = state.accounts.some((a) => a.id === payload.accountId);
         if (!accountExists) return state;
 
-        const transaction = TransactionSchema.parse(action.payload);
+        const transaction = TransactionSchema.parse(payload);
         return {
           ...state,
           transactions: state.transactions.map((t) =>
@@ -95,11 +123,16 @@ export function ledgerReducer(state: AppState, action: LedgerAction): AppState {
       };
     }
 
+    // -----------------------------------------------------------------------
+    // Category actions
+    // -----------------------------------------------------------------------
+
     case 'CREATE_CATEGORY': {
       try {
+        const payload = action.payload as Record<string, unknown>;
         const category = CategorySchema.parse({
           id: generateId(),
-          ...action.payload,
+          ...payload,
         });
         return { ...state, categories: [...state.categories, category] };
       } catch {
@@ -115,11 +148,16 @@ export function ledgerReducer(state: AppState, action: LedgerAction): AppState {
       };
     }
 
+    // -----------------------------------------------------------------------
+    // Budget actions
+    // -----------------------------------------------------------------------
+
     case 'CREATE_BUDGET': {
       try {
+        const payload = action.payload as Record<string, unknown>;
         const budget = BudgetSchema.parse({
           id: generateId(),
-          ...action.payload,
+          ...payload,
         });
         return { ...state, budgets: [...state.budgets, budget] };
       } catch {
@@ -147,12 +185,17 @@ export function ledgerReducer(state: AppState, action: LedgerAction): AppState {
       };
     }
 
+    // -----------------------------------------------------------------------
+    // Recurring rule actions
+    // -----------------------------------------------------------------------
+
     case 'CREATE_RECURRING_RULE': {
       try {
+        const payload = action.payload as Record<string, unknown>;
         const rule = RecurringRuleSchema.parse({
           id: generateId(),
           lastExpandedDate: null,
-          ...action.payload,
+          ...payload,
         });
         return { ...state, recurringRules: [...state.recurringRules, rule] };
       } catch {
@@ -180,8 +223,15 @@ export function ledgerReducer(state: AppState, action: LedgerAction): AppState {
       };
     }
 
+    // -----------------------------------------------------------------------
+    // Recurring rule expansion
+    // -----------------------------------------------------------------------
+
     case 'EXPAND_RECURRING_RULES': {
-      const { referenceDate, idGenerator = generateId } = action.payload as { referenceDate: string, idGenerator?: () => string };
+      const { referenceDate, idGenerator = generateId } = action.payload as {
+        referenceDate: string;
+        idGenerator?: () => string;
+      };
       const { transactions, updatedRules } = expandAllRules(
         state.recurringRules,
         state.transactions,
@@ -190,6 +240,10 @@ export function ledgerReducer(state: AppState, action: LedgerAction): AppState {
       );
       return { ...state, transactions, recurringRules: updatedRules };
     }
+
+    // -----------------------------------------------------------------------
+    // Import / Reset
+    // -----------------------------------------------------------------------
 
     case 'IMPORT_STATE': {
       try {
@@ -203,6 +257,10 @@ export function ledgerReducer(state: AppState, action: LedgerAction): AppState {
     case 'RESET_STATE': {
       return INITIAL_STATE;
     }
+
+    // -----------------------------------------------------------------------
+    // Default
+    // -----------------------------------------------------------------------
 
     default:
       return state;
