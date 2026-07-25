@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
 import { expandRule, expandAllRules } from '../src/lib/recurring.js';
+import { describe, it, expect } from 'vitest';
 
 // Simple deterministic ID generator for tests
 let idCounter = 0;
