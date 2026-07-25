@@ -5,7 +5,7 @@ import { exportToJSON, importFromJSON } from '../src/lib/storage.js';
 import { sortTransactions } from '../src/lib/sort.js';
 import { expandRule } from '../src/lib/recurring.js';
 import { describe, test, expect } from 'vitest';
-import { INITIAL_STATE, ledgerReducer } from '../src/lib/ledgerReducer.js';
+import { ledgerReducer, INITIAL_STATE } from '../src/lib/ledgerReducer.js';
 
 // ---------------------------------------------------------------------------
 // Property 3: Budget spending equals sum of matching transactions in period
