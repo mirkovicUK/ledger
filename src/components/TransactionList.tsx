@@ -1,4 +1,5 @@
 import type { Transaction, Category } from '../lib/types.js';
+import { TransactionRow } from './TransactionRow.js';
 
 export interface TransactionListProps {
   transactions?: Transaction[];
