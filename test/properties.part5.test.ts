@@ -1,27 +1,21 @@
+import { describe, test, expect } from 'vitest';
 import { computeBudgetSpending } from '../src/lib/budget.js';
 import { periodStart, periodEnd, isWithinRange } from '../src/lib/date.js';
 import { applyFilters } from '../src/lib/filter.js';
 import { exportToJSON, importFromJSON } from '../src/lib/storage.js';
 import { sortTransactions } from '../src/lib/sort.js';
 import { expandRule } from '../src/lib/recurring.js';
-import { describe, test, expect } from 'vitest';
+import type { Account, Transaction, Category, Budget, RecurringRule, AppState } from '../src/lib/types.js';
 
 // ---------------------------------------------------------------------------
-// Property 3: Budget spending equals sum of matching transactions in period
-// Validates: Requirements 4.4, 4.5
+// Property 10: Export/import roundtrip preserves all data
+// Validates: Requirements 8.6
 // ---------------------------------------------------------------------------
 
 describe('Property 10: Export/import roundtrip preserves all data', () => {
-  /**
-   * For any valid AppState, exportToJSON followed by importFromJSON must
-   * return { success: true, data } where data deeply equals the original state.
-   *
-   * **Validates: Requirements 8.6**
-   */
-
-  const ACCOUNT_TYPES = ['checking', 'savings', 'credit', 'cash', 'investment'];
-  const FREQUENCIES = ['daily', 'weekly', 'biweekly', 'monthly', 'yearly'];
-  const PERIODS = ['weekly', 'monthly', 'yearly'];
+  const ACCOUNT_TYPES: Array<'checking' | 'savings' | 'credit' | 'cash' | 'investment'> = ['checking', 'savings', 'credit', 'cash', 'investment'];
+  const FREQUENCIES: Array<'daily' | 'weekly' | 'biweekly' | 'monthly' | 'yearly'> = ['daily', 'weekly', 'biweekly', 'monthly', 'yearly'];
+  const PERIODS: Array<'weekly' | 'monthly' | 'yearly'> = ['weekly', 'monthly', 'yearly'];
 
   /** Deterministic pseudo-random number generator (mulberry32). */
   function makePrng(seed: number) {
@@ -65,7 +59,7 @@ describe('Property 10: Export/import roundtrip preserves all data', () => {
   }
 
   /** Generate a random alphanumeric string of given length. */
-  function randomString(rng: () => number, len: number, prefix: string = ''): string {
+  function randomString(rng: () => number, len: number, prefix = ''): string {
     const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
     let s = prefix;
     for (let i = 0; i < len; i++) {
@@ -82,10 +76,10 @@ describe('Property 10: Export/import roundtrip preserves all data', () => {
    *  - 0–2 budgets (referencing generated categories)
    *  - 0–2 recurring rules (referencing generated accounts)
    */
-  function generateAppState(rng: () => number, iteration: number) {
+  function generateAppState(rng: () => number, iteration: number): AppState {
     // --- accounts ---
     const accountCount = randInt(rng, 1, 3);
-    const accounts = [];
+    const accounts: Account[] = [];
     for (let i = 0; i < accountCount; i++) {
       accounts.push({
         id: `acc-p10-${iteration}-${i}`,
@@ -97,7 +91,7 @@ describe('Property 10: Export/import roundtrip preserves all data', () => {
 
     // --- categories ---
     const categoryCount = randInt(rng, 0, 3);
-    const categories = [];
+    const categories: Category[] = [];
     for (let i = 0; i < categoryCount; i++) {
       categories.push({
         id: `cat-p10-${iteration}-${i}`,
@@ -107,10 +101,10 @@ describe('Property 10: Export/import roundtrip preserves all data', () => {
 
     // --- transactions ---
     const txCount = randInt(rng, 0, 5);
-    const transactions = [];
+    const transactions: Transaction[] = [];
     for (let i = 0; i < txCount; i++) {
       const account = pick(rng, accounts);
-      const categoryId =
+      const categoryId: string | null =
         categories.length > 0 && rng() < 0.6
           ? pick(rng, categories).id
           : null;
@@ -128,10 +122,9 @@ describe('Property 10: Export/import roundtrip preserves all data', () => {
 
     // --- budgets ---
     const budgetCount = randInt(rng, 0, 2);
-    const budgets = [];
+    const budgets: Budget[] = [];
     for (let i = 0; i < budgetCount; i++) {
-      // budgets need a valid (positive finite) limit and a categoryId
-      const categoryId =
+      const categoryId: string =
         categories.length > 0
           ? pick(rng, categories).id
           : `cat-p10-fallback-${i}`;
@@ -146,10 +139,10 @@ describe('Property 10: Export/import roundtrip preserves all data', () => {
 
     // --- recurring rules ---
     const ruleCount = randInt(rng, 0, 2);
-    const recurringRules = [];
+    const recurringRules: RecurringRule[] = [];
     for (let i = 0; i < ruleCount; i++) {
       const account = pick(rng, accounts);
-      const categoryId =
+      const categoryId: string | null =
         categories.length > 0 && rng() < 0.5
           ? pick(rng, categories).id
           : null;
@@ -182,7 +175,9 @@ describe('Property 10: Export/import roundtrip preserves all data', () => {
       expect(result.success).toBe(true);
 
       // Roundtripped data must deeply equal the original state
-      expect(result.data).toEqual(state);
+      if (result.success) {
+        expect(result.data).toEqual(state);
+      }
     }
   });
 });
