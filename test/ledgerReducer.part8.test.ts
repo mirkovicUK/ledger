@@ -5,12 +5,10 @@ import { ledgerReducer, INITIAL_STATE } from '../src/lib/ledgerReducer.js';
 // Helpers
 // ---------------------------------------------------------------------------
 
-/** Build a minimal valid account payload (no id/createdAt needed — reducer generates them) */
 function makeAccountPayload(overrides = {}) {
   return { name: 'Checking', type: 'checking', ...overrides };
 }
 
-/** Build a state that already contains one account */
 function stateWithAccount(accountPayload = {}) {
   return ledgerReducer(INITIAL_STATE, {
     type: 'CREATE_ACCOUNT',
@@ -18,15 +16,13 @@ function stateWithAccount(accountPayload = {}) {
   });
 }
 
-/** Build a state with one account, return both state and the generated account */
 function stateAndAccount(accountPayload = {}) {
   const state = stateWithAccount(accountPayload);
   const account = state.accounts[0];
   return { state, account };
 }
 
-/** Build a minimal valid transaction payload for a known accountId */
-function makeTxPayload(accountId, overrides = {}) {
+function makeTxPayload(accountId: string, overrides = {}) {
   return {
     accountId,
     amount: 100,
@@ -37,7 +33,7 @@ function makeTxPayload(accountId, overrides = {}) {
 }
 
 // ---------------------------------------------------------------------------
-// INITIAL_STATE
+// RESET_STATE
 // ---------------------------------------------------------------------------
 
 describe('RESET_STATE', () => {
@@ -70,6 +66,3 @@ describe('RESET_STATE', () => {
 // ---------------------------------------------------------------------------
 // Schema validation rejection
 // ---------------------------------------------------------------------------
-
-
-```
