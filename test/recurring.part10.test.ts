@@ -1,5 +1,6 @@
 import { describe, test, expect } from 'vitest';
 import { expandRule, expandAllRules } from '../src/lib/recurring.js';
+import type { RecurringRule } from '../src/lib/types.js';
 
 // Simple deterministic ID generator for tests
 let idCounter = 0;
@@ -9,7 +10,7 @@ function makeIdGen() {
 }
 
 // Baseline rule factory
-function makeRule(overrides = {}) {
+function makeRule(overrides: Partial<RecurringRule> = {}): RecurringRule {
   return {
     id: 'rule-1',
     accountId: 'acct-1',
@@ -23,7 +24,7 @@ function makeRule(overrides = {}) {
   };
 }
 
-// ─── expandRule – correct dates per frequency ──────────────────────────────────
+// ─── expandRule – correct dates per frequency ──────────────────────────────
 
 describe('expandRule – idempotence (double expansion produces no duplicates)', () => {
   test('second call with same referenceDate generates no additional transactions', () => {
