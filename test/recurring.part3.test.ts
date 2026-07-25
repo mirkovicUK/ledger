@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import { expandRule } from '../src/lib/recurring.js';
+import { describe, test, expect } from 'vitest';
+import { expandRule, expandAllRules } from '../src/lib/recurring.js';
+import type { RecurringRule } from '../src/lib/types.js';
 
 // Simple deterministic ID generator for tests
 let idCounter = 0;
@@ -9,7 +10,7 @@ function makeIdGen() {
 }
 
 // Baseline rule factory
-function makeRule(overrides = {}) {
+function makeRule(overrides: Partial<RecurringRule> = {}): RecurringRule {
   return {
     id: 'rule-1',
     accountId: 'acct-1',
@@ -26,7 +27,7 @@ function makeRule(overrides = {}) {
 // ─── expandRule – correct dates per frequency ──────────────────────────────
 
 describe('expandRule – biweekly frequency', () => {
-  it('generates one transaction every two weeks', () => {
+  test('generates one transaction every two weeks', () => {
     const rule = makeRule({ frequency: 'biweekly', startDate: '2024-01-01' });
     const { transactions } = expandRule(rule, '2024-02-12', makeIdGen());
     // Jan 1, 15, 29; Feb 12 → 4 transactions
