@@ -5,28 +5,38 @@ import BudgetBar from '../components/BudgetBar.jsx';
 import { BudgetForm } from '../components/BudgetForm.jsx';
 import { RecurringRuleForm } from '../components/RecurringRuleForm.jsx';
 import { generateId } from '../lib/id.js';
+import type { BudgetFormPayload } from '../components/BudgetForm.jsx';
+import type { RecurringRuleFormPayload } from '../components/RecurringRuleForm.jsx';
+import type { BudgetProgress } from '../hooks/useBudgets.js';
+import type { RecurringRule } from '../lib/types.js';
 import styles from './Budgets.module.css';
-import type { AppState, Budget, Category, RecurringRule } from '../lib/types.js';
 
+/**
+ * Budgets page — budget management, category management, recurring rule management.
+ *
+ * Lazy-loaded by the App shell via React.lazy, so must be the default export.
+ *
+ * Requirements: 3.1, 4.1, 4.2, 4.3, 5.1, 5.4, 5.5
+ */
 export default function Budgets(): JSX.Element {
   const { state, dispatch } = useLedger();
   const budgetProgress = useBudgets(state);
 
-  const [showBudgetForm, setShowBudgetForm] = useState(false);
-  const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
+  // ── Budget section state ──────────────────────────────────────────────────
+  const [showBudgetForm, setShowBudgetForm] = useState<boolean>(false);
+  const [editingBudget, setEditingBudget] = useState<BudgetProgress | null>(null);
 
-  const [newCategoryName, setNewCategoryName] = useState('');
-  const [categoryError, setCategoryError] = useState('');
+  // ── Category section state ────────────────────────────────────────────────
+  const [newCategoryName, setNewCategoryName] = useState<string>('');
+  const [categoryError, setCategoryError] = useState<string>('');
 
-  const [showRuleForm, setShowRuleForm] = useState(false);
+  // ── Recurring rules section state ─────────────────────────────────────────
+  const [showRuleForm, setShowRuleForm] = useState<boolean>(false);
   const [editingRule, setEditingRule] = useState<RecurringRule | null>(null);
 
-  function handleCreateBudget(payload: {
-    categoryId: string;
-    limit: number;
-    period: 'weekly' | 'monthly' | 'yearly';
-    startDate: string;
-  }) {
+  // ── Budget handlers ───────────────────────────────────────────────────────
+
+  function handleCreateBudget(payload: BudgetFormPayload) {
     dispatch({
       type: 'CREATE_BUDGET',
       payload: { ...payload, id: generateId() },
@@ -34,15 +44,10 @@ export default function Budgets(): JSX.Element {
     setShowBudgetForm(false);
   }
 
-  function handleEditBudget(payload: {
-    categoryId: string;
-    limit: number;
-    period: 'weekly' | 'monthly' | 'yearly';
-    startDate: string;
-  }) {
+  function handleEditBudget(payload: BudgetFormPayload) {
     dispatch({
       type: 'EDIT_BUDGET',
-      payload: { ...payload, id: editingBudget?.id },
+      payload: { ...payload, id: editingBudget!.id },
     });
     setEditingBudget(null);
   }
@@ -51,15 +56,17 @@ export default function Budgets(): JSX.Element {
     dispatch({ type: 'DELETE_BUDGET', payload: { id } });
   }
 
-  function startEditBudget(budget: Budget) {
+  function startEditBudget(budget: BudgetProgress) {
     setEditingBudget(budget);
-    setShowBudgetForm(false);
+    setShowBudgetForm(false); // close create form if open
   }
 
   function cancelBudgetForm() {
     setShowBudgetForm(false);
     setEditingBudget(null);
   }
+
+  // ── Category handlers ─────────────────────────────────────────────────────
 
   function handleAddCategory(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -84,15 +91,9 @@ export default function Budgets(): JSX.Element {
     dispatch({ type: 'DELETE_CATEGORY', payload: { id } });
   }
 
-  function handleCreateRule(payload: {
-    accountId: string;
-    amount: number;
-    description: string;
-    categoryId: string | null;
-    frequency: 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'yearly';
-    startDate: string;
-    lastExpandedDate?: string | null;
-  }) {
+  // ── Recurring rule handlers ───────────────────────────────────────────────
+
+  function handleCreateRule(payload: RecurringRuleFormPayload) {
     dispatch({
       type: 'CREATE_RECURRING_RULE',
       payload: { ...payload, id: generateId(), lastExpandedDate: null },
@@ -100,18 +101,10 @@ export default function Budgets(): JSX.Element {
     setShowRuleForm(false);
   }
 
-  function handleEditRule(payload: {
-    accountId: string;
-    amount: number;
-    description: string;
-    categoryId: string | null;
-    frequency: 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'yearly';
-    startDate: string;
-    lastExpandedDate?: string | null;
-  }) {
+  function handleEditRule(payload: RecurringRuleFormPayload) {
     dispatch({
       type: 'EDIT_RECURRING_RULE',
-      payload: { ...payload, id: editingRule?.id },
+      payload: { ...payload, id: editingRule!.id },
     });
     setEditingRule(null);
   }
@@ -130,6 +123,8 @@ export default function Budgets(): JSX.Element {
     setEditingRule(null);
   }
 
+  // ── Helpers ───────────────────────────────────────────────────────────────
+
   function getCategoryName(categoryId: string): string {
     return state.categories.find(c => c.id === categoryId)?.name ?? categoryId;
   }
@@ -138,15 +133,18 @@ export default function Budgets(): JSX.Element {
     return state.accounts.find(a => a.id === accountId)?.name ?? accountId;
   }
 
-  return (
-    <main className={styles.page} aria-label="Budgets">
+  // ── Render ────────────────────────────────────────────────────────────────
 
-      <section className={styles.section} aria-labelledby="budgets-heading">
-        <div className={styles.sectionHeader}>
-          <h2 id="budgets-heading" className={styles.sectionHeading}>Budgets</h2>
+  return (
+    <main className={styles['page']} aria-label="Budgets">
+
+      {/* ── Budgets section ─────────────────────────────────────────────── */}
+      <section className={styles['section']} aria-labelledby="budgets-heading">
+        <div className={styles['sectionHeader']}>
+          <h2 id="budgets-heading" className={styles['sectionHeading']}>Budgets</h2>
           {!showBudgetForm && !editingBudget && (
             <button
-              className={styles.addButton}
+              className={styles['addButton']}
               onClick={() => setShowBudgetForm(true)}
             >
               + Add Budget
@@ -154,8 +152,9 @@ export default function Budgets(): JSX.Element {
           )}
         </div>
 
+        {/* Create budget form */}
         {showBudgetForm && (
-          <div className={styles.formCard}>
+          <div className={styles['formCard']}>
             <BudgetForm
               categories={state.categories}
               onSubmit={handleCreateBudget}
@@ -164,16 +163,17 @@ export default function Budgets(): JSX.Element {
           </div>
         )}
 
+        {/* Budget list */}
         {budgetProgress.length === 0 && !showBudgetForm ? (
-          <p className={styles.emptyState}>No budgets yet. Add one to track your spending.</p>
+          <p className={styles['emptyState']}>No budgets yet. Add one to track your spending.</p>
         ) : (
-          <div className={styles.budgetGrid}>
+          <div className={styles['budgetGrid']}>
             {budgetProgress.map(budget => {
               const isEditing = editingBudget?.id === budget.id;
               return (
-                <div key={budget.id} className={styles.budgetItem}>
+                <div key={budget.id} className={styles['budgetItem']}>
                   {isEditing ? (
-                    <div className={styles.formCard}>
+                    <div className={styles['formCard']}>
                       <BudgetForm
                         categories={state.categories}
                         initialValues={budget}
@@ -190,16 +190,16 @@ export default function Budgets(): JSX.Element {
                         overspent={budget.overspent}
                         categoryName={getCategoryName(budget.categoryId)}
                       />
-                      <div className={styles.itemActions}>
+                      <div className={styles['itemActions']}>
                         <button
-                          className={styles.editButton}
+                          className={styles['editButton']}
                           onClick={() => startEditBudget(budget)}
                           aria-label={`Edit budget for ${getCategoryName(budget.categoryId)}`}
                         >
                           Edit
                         </button>
                         <button
-                          className={styles.deleteButton}
+                          className={styles['deleteButton']}
                           onClick={() => handleDeleteBudget(budget.id)}
                           aria-label={`Delete budget for ${getCategoryName(budget.categoryId)}`}
                         >
@@ -215,23 +215,25 @@ export default function Budgets(): JSX.Element {
         )}
       </section>
 
-      <section className={styles.section} aria-labelledby="categories-heading">
-        <h2 id="categories-heading" className={styles.sectionHeading}>Categories</h2>
+      {/* ── Categories section ───────────────────────────────────────────── */}
+      <section className={styles['section']} aria-labelledby="categories-heading">
+        <h2 id="categories-heading" className={styles['sectionHeading']}>Categories</h2>
 
+        {/* Add category form */}
         <form
-          className={styles.inlineForm}
+          className={styles['inlineForm']}
           onSubmit={handleAddCategory}
           aria-label="Add category"
         >
-          <label htmlFor="new-category-name" className={styles.srOnly}>
+          <label htmlFor="new-category-name" className={styles['srOnly']}>
             New category name
           </label>
           <input
             id="new-category-name"
             type="text"
-            className={styles.textInput}
+            className={styles['textInput']}
             value={newCategoryName}
-            onChange={(e) => {
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               setNewCategoryName(e.target.value);
               if (categoryError) setCategoryError('');
             }}
@@ -239,23 +241,24 @@ export default function Budgets(): JSX.Element {
             aria-describedby={categoryError ? 'category-error' : undefined}
             aria-invalid={Boolean(categoryError)}
           />
-          <button type="submit" className={styles.addButton}>Add</button>
+          <button type="submit" className={styles['addButton']}>Add</button>
         </form>
         {categoryError && (
-          <span id="category-error" role="alert" className={styles.fieldError}>
+          <span id="category-error" role="alert" className={styles['fieldError']}>
             {categoryError}
           </span>
         )}
 
+        {/* Category list */}
         {state.categories.length === 0 ? (
-          <p className={styles.emptyState}>No categories yet.</p>
+          <p className={styles['emptyState']}>No categories yet.</p>
         ) : (
-          <ul className={styles.itemList} aria-label="Category list">
+          <ul className={styles['itemList']} aria-label="Category list">
             {state.categories.map(cat => (
-              <li key={cat.id} className={styles.listItem}>
-                <span className={styles.itemName}>{cat.name}</span>
+              <li key={cat.id} className={styles['listItem']}>
+                <span className={styles['itemName']}>{cat.name}</span>
                 <button
-                  className={styles.deleteButton}
+                  className={styles['deleteButton']}
                   onClick={() => handleDeleteCategory(cat.id)}
                   aria-label={`Delete category ${cat.name}`}
                 >
@@ -267,12 +270,13 @@ export default function Budgets(): JSX.Element {
         )}
       </section>
 
-      <section className={styles.section} aria-labelledby="rules-heading">
-        <div className={styles.sectionHeader}>
-          <h2 id="rules-heading" className={styles.sectionHeading}>Recurring Rules</h2>
+      {/* ── Recurring Rules section ──────────────────────────────────────── */}
+      <section className={styles['section']} aria-labelledby="rules-heading">
+        <div className={styles['sectionHeader']}>
+          <h2 id="rules-heading" className={styles['sectionHeading']}>Recurring Rules</h2>
           {!showRuleForm && !editingRule && (
             <button
-              className={styles.addButton}
+              className={styles['addButton']}
               onClick={() => setShowRuleForm(true)}
             >
               + Add Rule
@@ -280,8 +284,9 @@ export default function Budgets(): JSX.Element {
           )}
         </div>
 
+        {/* Create rule form */}
         {showRuleForm && (
-          <div className={styles.formCard}>
+          <div className={styles['formCard']}>
             <RecurringRuleForm
               accounts={state.accounts}
               categories={state.categories}
@@ -291,16 +296,17 @@ export default function Budgets(): JSX.Element {
           </div>
         )}
 
+        {/* Rules list */}
         {state.recurringRules.length === 0 && !showRuleForm ? (
-          <p className={styles.emptyState}>No recurring rules yet. Add one to automate transactions.</p>
+          <p className={styles['emptyState']}>No recurring rules yet. Add one to automate transactions.</p>
         ) : (
-          <ul className={styles.itemList} aria-label="Recurring rules list">
+          <ul className={styles['itemList']} aria-label="Recurring rules list">
             {state.recurringRules.map(rule => {
               const isEditing = editingRule?.id === rule.id;
               return (
-                <li key={rule.id} className={styles.listItem}>
+                <li key={rule.id} className={styles['listItem']}>
                   {isEditing ? (
-                    <div className={styles.formCard}>
+                    <div className={styles['formCard']}>
                       <RecurringRuleForm
                         accounts={state.accounts}
                         categories={state.categories}
@@ -311,27 +317,27 @@ export default function Budgets(): JSX.Element {
                     </div>
                   ) : (
                     <>
-                      <div className={styles.ruleInfo}>
-                        <span className={styles.itemName}>{rule.description}</span>
-                        <span className={styles.ruleMeta}>
+                      <div className={styles['ruleInfo']}>
+                        <span className={styles['itemName']}>{rule.description}</span>
+                        <span className={styles['ruleMeta']}>
                           {rule.frequency} · {getAccountName(rule.accountId)}
                           {rule.categoryId ? ` · ${getCategoryName(rule.categoryId)}` : ''}
                           {' · '}
-                          <span className={rule.amount < 0 ? styles.amountNegative : styles.amountPositive}>
+                          <span className={rule.amount < 0 ? styles['amountNegative'] : styles['amountPositive']}>
                             {rule.amount < 0 ? '-' : '+'}${Math.abs(rule.amount).toFixed(2)}
                           </span>
                         </span>
                       </div>
-                      <div className={styles.itemActions}>
+                      <div className={styles['itemActions']}>
                         <button
-                          className={styles.editButton}
+                          className={styles['editButton']}
                           onClick={() => startEditRule(rule)}
                           aria-label={`Edit rule ${rule.description}`}
                         >
                           Edit
                         </button>
                         <button
-                          className={styles.deleteButton}
+                          className={styles['deleteButton']}
                           onClick={() => handleDeleteRule(rule.id)}
                           aria-label={`Delete rule ${rule.description}`}
                         >
