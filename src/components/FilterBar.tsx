@@ -1,3 +1,7 @@
+import type { Account, Category } from '../lib/types.js';
+import type { FilterCriteria, AmountRange } from '../lib/filter.js';
+import type { SortConfig } from '../lib/sort.js';
+
 /**
  * FilterBar — filter and sort controls for the transaction list.
  *
@@ -9,10 +13,6 @@
  *   onFiltersChange(newFilters)   — called when any filter changes
  *   onSortChange(newSortConfig)   — called when sort config changes
  */
-import type { Account, Category } from '../lib/types.js';
-import type { FilterCriteria, DateRange, AmountRange } from '../lib/filter.js';
-import type { SortConfig } from '../lib/sort.js';
-import React from 'react';
 
 export interface FilterBarProps {
   accounts?: Pick<Account, 'id' | 'name'>[];
@@ -23,16 +23,14 @@ export interface FilterBarProps {
   onSortChange: (sortConfig: SortConfig) => void;
 }
 
-export function FilterBar(props: FilterBarProps): JSX.Element {
-  const {
-    accounts = [],
-    categories = [],
-    filters = {},
-    sortConfig = {},
-    onFiltersChange,
-    onSortChange,
-  } = props;
-
+export function FilterBar({
+  accounts = [],
+  categories = [],
+  filters = {},
+  sortConfig = {},
+  onFiltersChange,
+  onSortChange,
+}: FilterBarProps): JSX.Element {
   const { accountId = null, categoryId = null, dateRange = null, amountRange = null } = filters;
   const { field = 'date', direction = 'desc' } = sortConfig;
 
@@ -68,9 +66,13 @@ export function FilterBar(props: FilterBarProps): JSX.Element {
     const raw = e.target.value;
     const min = raw === '' ? null : parseFloat(raw);
     const max = amountRange?.max ?? null;
+    const newAmountRange: AmountRange | null =
+      min !== null || max !== null
+        ? { min: min ?? 0, max: max ?? 0 }
+        : null;
     onFiltersChange({
       ...filters,
-      amountRange: min !== null || max !== null ? { min: min ?? null, max: max ?? null } : null,
+      amountRange: newAmountRange,
     });
   }
 
@@ -78,20 +80,24 @@ export function FilterBar(props: FilterBarProps): JSX.Element {
     const raw = e.target.value;
     const min = amountRange?.min ?? null;
     const max = raw === '' ? null : parseFloat(raw);
+    const newAmountRange: AmountRange | null =
+      min !== null || max !== null
+        ? { min: min ?? 0, max: max ?? 0 }
+        : null;
     onFiltersChange({
       ...filters,
-      amountRange: min !== null || max !== null ? { min: min ?? null, max: max ?? null } : null,
+      amountRange: newAmountRange,
     });
   }
 
   // ── sort helpers ─────────────────────────────────────────────────────────────
 
   function handleFieldChange(e: React.ChangeEvent<HTMLSelectElement>) {
-    onSortChange({ field: e.target.value as SortConfig['field'], direction });
+    onSortChange({ field: e.target.value as SortConfig['field'], direction: direction as SortConfig['direction'] });
   }
 
   function handleDirectionToggle() {
-    onSortChange({ field, direction: direction === 'asc' ? 'desc' : 'asc' });
+    onSortChange({ field: field as SortConfig['field'], direction: direction === 'asc' ? 'desc' : 'asc' });
   }
 
   // ── render ───────────────────────────────────────────────────────────────────
