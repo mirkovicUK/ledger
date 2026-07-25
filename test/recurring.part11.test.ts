@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest';
+import { describe, test, expect } from 'vitest';
 import { expandRule, expandAllRules } from '../src/lib/recurring.js';
+import type { RecurringRule, Transaction } from '../src/lib/types.js';
 
 // Simple deterministic ID generator for tests
 let idCounter = 0;
@@ -9,7 +10,7 @@ function makeIdGen() {
 }
 
 // Baseline rule factory
-function makeRule(overrides = {}) {
+function makeRule(overrides: Partial<RecurringRule> = {}): RecurringRule {
   return {
     id: 'rule-1',
     accountId: 'acct-1',
@@ -23,12 +24,21 @@ function makeRule(overrides = {}) {
   };
 }
 
-// ─── expandRule – correct dates per frequency ──────────────────────────────
+// ─── expandAllRules ──────────────────────────────────────────────────────────
 
 describe('expandAllRules', () => {
-  it('merges new transactions with existing ones', () => {
+  test('merges new transactions with existing ones', () => {
     const rules = [makeRule({ frequency: 'monthly', startDate: '2024-01-01' })];
-    const existing = [{ id: 'old-1', accountId: 'acct-x', amount: 5, date: '2023-12-01' }];
+    const existing: Transaction[] = [
+      {
+        id: 'old-1',
+        accountId: 'acct-x',
+        amount: 5,
+        date: '2023-12-01',
+        description: '',
+        createdAt: new Date().toISOString(),
+      },
+    ];
 
     const { transactions } = expandAllRules(rules, existing, '2024-02-01', makeIdGen());
 
@@ -37,7 +47,7 @@ describe('expandAllRules', () => {
     expect(transactions[0]).toEqual(existing[0]);
   });
 
-  it('returns updatedRules with fresh lastExpandedDate for each rule', () => {
+  test('returns updatedRules with fresh lastExpandedDate for each rule', () => {
     const rules = [
       makeRule({ id: 'r1', frequency: 'monthly', startDate: '2024-01-01' }),
       makeRule({ id: 'r2', frequency: 'weekly', startDate: '2024-01-01' }),
@@ -50,7 +60,7 @@ describe('expandAllRules', () => {
     expect(updatedRules[1].lastExpandedDate).toBe('2024-01-29');
   });
 
-  it('is idempotent across two full calls', () => {
+  test('is idempotent across two full calls', () => {
     const rules = [makeRule({ frequency: 'monthly', startDate: '2024-01-01' })];
 
     const { transactions: first, updatedRules: rules1 } = expandAllRules(
@@ -66,8 +76,17 @@ describe('expandAllRules', () => {
     expect(second).toHaveLength(first.length);
   });
 
-  it('handles an empty rules array', () => {
-    const existing = [{ id: 'e1', amount: 10, date: '2024-01-01' }];
+  test('handles an empty rules array', () => {
+    const existing: Transaction[] = [
+      {
+        id: 'e1',
+        amount: 10,
+        date: '2024-01-01',
+        accountId: 'acct-1',
+        description: '',
+        createdAt: new Date().toISOString(),
+      },
+    ];
     const { transactions, updatedRules } = expandAllRules([], existing, '2024-06-01', makeIdGen());
     expect(transactions).toHaveLength(1);
     expect(updatedRules).toHaveLength(0);
