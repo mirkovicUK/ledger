@@ -26,7 +26,7 @@ function stateAndAccount(accountPayload = {}) {
 }
 
 /** Build a minimal valid transaction payload for a known accountId */
-function makeTxPayload(accountId, overrides = {}) {
+function makeTxPayload(accountId: string, overrides = {}) {
   return {
     accountId,
     amount: 100,
@@ -84,6 +84,3 @@ describe('Schema validation rejection', () => {
 // ---------------------------------------------------------------------------
 // Immutability
 // ---------------------------------------------------------------------------
-
-
-```
