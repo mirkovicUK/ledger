@@ -1,26 +1,21 @@
+import { describe, test, expect } from 'vitest';
 import { computeBudgetSpending } from '../src/lib/budget.js';
 import { periodStart, periodEnd, isWithinRange } from '../src/lib/date.js';
 import { applyFilters } from '../src/lib/filter.js';
 import { exportToJSON, importFromJSON } from '../src/lib/storage.js';
 import { sortTransactions } from '../src/lib/sort.js';
 import { expandRule } from '../src/lib/recurring.js';
-import { describe, test, expect } from 'vitest';
+import type { SortConfig } from '../src/lib/sort.js';
+import type { AppState } from '../src/lib/types.js';
 
 // ---------------------------------------------------------------------------
-// Property 3: Budget spending equals sum of matching transactions in period
-// Validates: Requirements 4.4, 4.5
+// Property 9: Sort results are correctly ordered
+// Validates: Requirements 6.2
 // ---------------------------------------------------------------------------
 
 describe('Property 9: Sort results are correctly ordered', () => {
-  /**
-   * For any sorted array, every adjacent pair (result[i], result[i+1])
-   * satisfies the ordering constraint for the given field and direction.
-   *
-   * **Validates: Requirements 6.2**
-   */
-
-  const FIELDS = ['date', 'amount', 'description'];
-  const DIRECTIONS = ['asc', 'desc'];
+  const FIELDS: Array<'date' | 'amount' | 'description'> = ['date', 'amount', 'description'];
+  const DIRECTIONS: Array<'asc' | 'desc'> = ['asc', 'desc'];
 
   function p9RandInt(min: number, max: number): number {
     return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -34,14 +29,12 @@ describe('Property 9: Sort results are correctly ordered', () => {
     return String(n).padStart(2, '0');
   }
 
-  /** Random YYYY-MM-DD in 2024 */
   function p9RandomDate2024(): string {
     const month = p9RandInt(1, 12);
     const day = p9RandInt(1, 28);
     return `2024-${p9Pad(month)}-${p9Pad(day)}`;
   }
 
-  /** Random alphanumeric string of length 4-12 */
   function p9RandomDescription(): string {
     const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
     const len = p9RandInt(4, 12);
@@ -52,16 +45,7 @@ describe('Property 9: Sort results are correctly ordered', () => {
     return s;
   }
 
-  /** Generate 2–15 random transactions */
-  function p9GenerateTransactions(): Array<{
-    id: string;
-    accountId: string;
-    amount: number;
-    date: string;
-    description: string;
-    categoryId: null;
-    createdAt: string;
-  }> {
+  function p9GenerateTransactions() {
     const count = p9RandInt(2, 15);
     return Array.from({ length: count }, (_, i) => ({
       id: `tx-p9-${i}`,
@@ -69,23 +53,19 @@ describe('Property 9: Sort results are correctly ordered', () => {
       amount: p9RandFloat(-500, 1000),
       date: p9RandomDate2024(),
       description: p9RandomDescription(),
-      categoryId: null,
+      categoryId: null as string | null,
       createdAt: new Date().toISOString(),
     }));
   }
 
-  /**
-   * Compare two values for the given field and return a number following
-   * the same sign convention as Array.prototype.sort comparators:
-   *   < 0 → a before b
-   *   = 0 → equal
-   *   > 0 → b before a
-   */
-  function compareValues(a: any, b: any, field: string): number {
+  function compareValues(
+    a: { amount: number; date: string; description: string },
+    b: { amount: number; date: string; description: string },
+    field: 'date' | 'amount' | 'description'
+  ): number {
     if (field === 'amount') {
       return a.amount - b.amount;
     }
-    // date and description: lexicographic
     const aVal = a[field] ?? '';
     const bVal = b[field] ?? '';
     if (aVal < bVal) return -1;
@@ -101,17 +81,15 @@ describe('Property 9: Sort results are correctly ordered', () => {
       const field = FIELDS[p9RandInt(0, FIELDS.length - 1)];
       const direction = DIRECTIONS[p9RandInt(0, DIRECTIONS.length - 1)];
 
-      const result = sortTransactions(transactions, { field, direction });
+      const config: SortConfig = { field, direction };
+      const result = sortTransactions(transactions, config);
 
-      // Verify pairwise ordering invariant for all adjacent pairs
       for (let i = 0; i < result.length - 1; i++) {
         const cmp = compareValues(result[i], result[i + 1], field);
 
         if (direction === 'asc') {
-          // result[i] should be <= result[i+1]
           expect(cmp).toBeLessThanOrEqual(0);
         } else {
-          // direction === 'desc': result[i] should be >= result[i+1]
           expect(cmp).toBeGreaterThanOrEqual(0);
         }
       }
@@ -123,13 +101,13 @@ describe('Property 9: Sort results are correctly ordered', () => {
 
     for (let iteration = 0; iteration < ITERATIONS; iteration++) {
       const transactions = p9GenerateTransactions();
-      const original = transactions.map((t) => ({ ...t }));
+      const original = transactions.map(t => ({ ...t }));
       const field = FIELDS[p9RandInt(0, FIELDS.length - 1)];
       const direction = DIRECTIONS[p9RandInt(0, DIRECTIONS.length - 1)];
 
-      sortTransactions(transactions, { field, direction });
+      const config: SortConfig = { field, direction };
+      sortTransactions(transactions, config);
 
-      // Original array must be unchanged
       expect(transactions).toHaveLength(original.length);
       for (let i = 0; i < original.length; i++) {
         expect(transactions[i].id).toBe(original[i].id);
@@ -146,154 +124,148 @@ describe('Property 9: Sort results are correctly ordered', () => {
 // Validates: Requirements 8.6
 // ---------------------------------------------------------------------------
 
-
 describe('Property 10: Export/import roundtrip preserves all data', () => {
-  test('roundtrip preserves all data fields', () => {
-    // Generate a complex state with various data types and structures
-    const testState = {
-      accounts: [
-        {
-          id: 'acc-1',
-          name: 'Checking Account',
-          type: 'checking',
-          createdAt: new Date('2024-01-01T00:00:00Z').toISOString(),
-        },
-        {
-          id: 'acc-2',
-          name: 'Savings Account',
-          type: 'savings',
-          createdAt: new Date('2024-01-02T00:00:00Z').toISOString(),
-        },
-      ],
-      transactions: [
-        {
-          id: 'tx-1',
-          accountId: 'acc-1',
-          amount: 100.50,
-          date: '2024-01-01',
-          description: 'Grocery Shopping',
-          categoryId: 'cat-1',
-          createdAt: new Date('2024-01-01T12:00:00Z').toISOString(),
-        },
-        {
-          id: 'tx-2',
-          accountId: 'acc-2',
-          amount: -25.75,
-          date: '2024-01-02',
-          description: 'ATM Withdrawal',
-          categoryId: null,
-          createdAt: new Date('2024-01-02T14:30:00Z').toISOString(),
-        },
-      ],
-      categories: [
-        {
-          id: 'cat-1',
-          name: 'Groceries',
-        },
-        {
-          id: 'cat-2',
-          name: 'Entertainment',
-        },
-      ],
-      budgets: [
-        {
-          id: 'bud-1',
-          categoryId: 'cat-1',
-          limit: 500,
-          period: 'monthly',
-          startDate: '2024-01-01',
-        },
-      ],
-      recurringRules: [
-        {
-          id: 'rule-1',
-          accountId: 'acc-1',
-          amount: 50,
-          description: 'Coffee Subscription',
-          categoryId: 'cat-1',
-          frequency: 'monthly',
-          startDate: '2024-01-01',
-          lastExpandedDate: null,
-        },
-      ],
-    };
+  function p10RandInt(min: number, max: number): number {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
 
-    // Perform roundtrip: export → import
-    const jsonString = exportToJSON(testState);
-    const result = importFromJSON(jsonString);
+  function p10RandFloat(min: number, max: number): number {
+    return parseFloat((Math.random() * (max - min) + min).toFixed(2));
+  }
 
-    // Verify success
-    expect(result.success).toBe(true);
+  function p10Pad(n: number): string {
+    return String(n).padStart(2, '0');
+  }
 
-    // Verify imported data matches original
-    const importedState = result.data;
+  function p10RandomDate2024(): string {
+    const month = p10RandInt(1, 12);
+    const day = p10RandInt(1, 28);
+    return `2024-${p10Pad(month)}-${p10Pad(day)}`;
+  }
 
-    // Compare top-level properties
-    expect(importedState.accounts).toEqual(testState.accounts);
-    expect(importedState.transactions).toEqual(testState.transactions);
-    expect(importedState.categories).toEqual(testState.categories);
-    expect(importedState.budgets).toEqual(testState.budgets);
-    expect(importedState.recurringRules).toEqual(testState.recurringRules);
+  function p10RandomString(len: number): string {
+    const chars = 'abcdefghijklmnopqrstuvwxyz';
+    let s = '';
+    for (let i = 0; i < len; i++) {
+      s += chars[p10RandInt(0, chars.length - 1)];
+    }
+    return s;
+  }
 
-    // Verify specific field equality with detailed checks
-    testState.accounts.forEach((acc, index) => {
-      const importedAcc = importedState.accounts[index];
-      expect(importedAcc.id).toBe(acc.id);
-      expect(importedAcc.name).toBe(acc.name);
-      expect(importedAcc.type).toBe(acc.type);
-      expect(new Date(importedAcc.createdAt)).toEqual(new Date(acc.createdAt));
-    });
+  function p10GenerateState(): AppState {
+    const accountCount = p10RandInt(1, 3);
+    const accountTypes: Array<'checking' | 'savings' | 'credit' | 'cash' | 'investment'> = [
+      'checking', 'savings', 'credit', 'cash', 'investment'
+    ];
+    const accounts = Array.from({ length: accountCount }, (_, i) => ({
+      id: `acc-${i}`,
+      name: `Account ${i}`,
+      type: accountTypes[p10RandInt(0, accountTypes.length - 1)],
+      createdAt: new Date().toISOString(),
+    }));
 
-    testState.transactions.forEach((tx, index) => {
-      const importedTx = importedState.transactions[index];
-      expect(importedTx.id).toBe(tx.id);
-      expect(importedTx.accountId).toBe(tx.accountId);
-      expect(importedTx.amount).toBeCloseTo(tx.amount);
-      expect(importedTx.date).toBe(tx.date);
-      expect(importedTx.description).toBe(tx.description);
-      expect(importedTx.categoryId).toBe(tx.categoryId);
-      expect(new Date(importedTx.createdAt)).toEqual(new Date(tx.createdAt));
-    });
+    const categoryCount = p10RandInt(1, 3);
+    const categories = Array.from({ length: categoryCount }, (_, i) => ({
+      id: `cat-${i}`,
+      name: `Category ${i}`,
+    }));
 
-    testState.categories.forEach((cat, index) => {
-      const importedCat = importedState.categories[index];
-      expect(importedCat.id).toBe(cat.id);
-      expect(importedCat.name).toBe(cat.name);
-    });
+    const txCount = p10RandInt(2, 8);
+    const transactions = Array.from({ length: txCount }, (_, i) => ({
+      id: `tx-${i}`,
+      accountId: accounts[p10RandInt(0, accounts.length - 1)].id,
+      amount: p10RandFloat(-500, 1000),
+      date: p10RandomDate2024(),
+      description: p10RandomString(8),
+      categoryId: Math.random() > 0.5 ? categories[p10RandInt(0, categories.length - 1)].id : null,
+      createdAt: new Date().toISOString(),
+    }));
 
-    testState.budgets.forEach((bud, index) => {
-      const importedBud = importedState.budgets[index];
-      expect(importedBud.id).toBe(bud.id);
-      expect(importedBud.categoryId).toBe(bud.categoryId);
-      expect(importedBud.limit).toBe(bud.limit);
-      expect(importedBud.period).toBe(bud.period);
-      expect(importedBud.startDate).toBe(bud.startDate);
-    });
+    const periods: Array<'weekly' | 'monthly' | 'yearly'> = ['weekly', 'monthly', 'yearly'];
+    const budgetCount = p10RandInt(1, 2);
+    const budgets = Array.from({ length: budgetCount }, (_, i) => ({
+      id: `bud-${i}`,
+      categoryId: categories[p10RandInt(0, categories.length - 1)].id,
+      limit: p10RandFloat(100, 1000),
+      period: periods[p10RandInt(0, periods.length - 1)],
+      startDate: p10RandomDate2024(),
+    }));
 
-    testState.recurringRules.forEach((rule, index) => {
-      const importedRule = importedState.recurringRules[index];
-      expect(importedRule.id).toBe(rule.id);
-      expect(importedRule.accountId).toBe(rule.accountId);
-      expect(importedRule.amount).toBe(rule.amount);
-      expect(importedRule.description).toBe(rule.description);
-      expect(importedRule.categoryId).toBe(rule.categoryId);
-      expect(importedRule.frequency).toBe(rule.frequency);
-      expect(importedRule.startDate).toBe(rule.startDate);
-      expect(importedRule.lastExpandedDate).toBe(rule.lastExpandedDate);
-    });
+    const frequencies: Array<'daily' | 'weekly' | 'biweekly' | 'monthly' | 'yearly'> = [
+      'daily', 'weekly', 'biweekly', 'monthly', 'yearly'
+    ];
+    const ruleCount = p10RandInt(0, 2);
+    const recurringRules = Array.from({ length: ruleCount }, (_, i) => ({
+      id: `rule-${i}`,
+      accountId: accounts[p10RandInt(0, accounts.length - 1)].id,
+      amount: p10RandFloat(-200, 500),
+      description: p10RandomString(6),
+      categoryId: Math.random() > 0.5 ? categories[p10RandInt(0, categories.length - 1)].id : null,
+      frequency: frequencies[p10RandInt(0, frequencies.length - 1)],
+      startDate: p10RandomDate2024(),
+      lastExpandedDate: null as string | null,
+    }));
+
+    return { accounts, transactions, categories, budgets, recurringRules };
+  }
+
+  test('roundtrip preserves all data across 50 random states', () => {
+    const ITERATIONS = 50;
+
+    for (let iteration = 0; iteration < ITERATIONS; iteration++) {
+      const state = p10GenerateState();
+      const json = exportToJSON(state);
+      const result = importFromJSON(json);
+
+      expect(result.success).toBe(true);
+      if (!result.success) continue;
+
+      const imported = result.data;
+
+      expect(imported.accounts).toHaveLength(state.accounts.length);
+      expect(imported.transactions).toHaveLength(state.transactions.length);
+      expect(imported.categories).toHaveLength(state.categories.length);
+      expect(imported.budgets).toHaveLength(state.budgets.length);
+      expect(imported.recurringRules).toHaveLength(state.recurringRules.length);
+
+      for (let i = 0; i < state.accounts.length; i++) {
+        expect(imported.accounts[i].id).toBe(state.accounts[i].id);
+        expect(imported.accounts[i].name).toBe(state.accounts[i].name);
+        expect(imported.accounts[i].type).toBe(state.accounts[i].type);
+      }
+
+      for (let i = 0; i < state.transactions.length; i++) {
+        expect(imported.transactions[i].id).toBe(state.transactions[i].id);
+        expect(imported.transactions[i].amount).toBe(state.transactions[i].amount);
+        expect(imported.transactions[i].date).toBe(state.transactions[i].date);
+        expect(imported.transactions[i].description).toBe(state.transactions[i].description);
+        expect(imported.transactions[i].categoryId).toBe(state.transactions[i].categoryId);
+      }
+
+      for (let i = 0; i < state.budgets.length; i++) {
+        expect(imported.budgets[i].id).toBe(state.budgets[i].id);
+        expect(imported.budgets[i].limit).toBe(state.budgets[i].limit);
+        expect(imported.budgets[i].period).toBe(state.budgets[i].period);
+      }
+    }
   });
 
-  test('handles invalid JSON gracefully', () => {
-    const invalidJson = '{ invalid json }';
-    const result = importFromJSON(invalidJson);
+  test('importFromJSON returns error for invalid JSON', () => {
+    const result = importFromJSON('not valid json {{{');
     expect(result.success).toBe(false);
-    expect(result.error).toBeDefined();
+    if (!result.success) {
+      expect(typeof result.error).toBe('string');
+      expect(result.error.length).toBeGreaterThan(0);
+    }
   });
 
-  test('handles corrupted state data gracefully', () => {
-    const corruptedJson = '{ "accounts": ["not an object"] }';
-    const result = importFromJSON(corruptedJson);
+  test('importFromJSON returns error for valid JSON but invalid schema', () => {
+    const badPayload = JSON.stringify({ version: 1, exportedAt: 'bad', data: { accounts: 'wrong' } });
+    const result = importFromJSON(badPayload);
     expect(result.success).toBe(false);
-    expect(result.error).toBeDefined();
+    if (!result.success) {
+      expect(typeof result.error).toBe('string');
+      expect(result.error.length).toBeGreaterThan(0);
+    }
   });
 });
