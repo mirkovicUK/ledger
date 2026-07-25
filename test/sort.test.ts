@@ -1,26 +1,26 @@
-import { describe, it, expect } from 'vitest';
+import { describe, test, expect } from 'vitest';
 import { sortTransactions } from '../src/lib/sort.js';
 
 // Sample transaction fixtures
 const transactions = [
-  { id: '1', date: '2024-03-15', amount: 200, description: 'Groceries' },
-  { id: '2', date: '2024-01-05', amount: -50, description: 'Amazon' },
+  { id: '1', date: '2024-03-15', amount: 200,  description: 'Groceries' },
+  { id: '2', date: '2024-01-05', amount: -50,  description: 'Amazon' },
   { id: '3', date: '2024-02-20', amount: 1200, description: 'Rent' },
-  { id: '4', date: '2024-01-05', amount: 75, description: 'Coffee' },
-  { id: '5', date: '2024-04-01', amount: -300, description: 'Utilities' },
+  { id: '4', date: '2024-01-05', amount: 75,   description: 'Coffee' },
+  { id: '5', date: '2024-04-01', amount: -300,  description: 'Utilities' },
 ];
 
 // ─── Immutability ────────────────────────────────────────────────────────────
 
 describe('sortTransactions — immutability', () => {
-  it('does not mutate the input array', () => {
+  test('does not mutate the input array', () => {
     const input = [...transactions];
     const snapshot = input.map((t) => ({ ...t }));
     sortTransactions(input, { field: 'date', direction: 'asc' });
     expect(input).toEqual(snapshot);
   });
 
-  it('returns a new array reference', () => {
+  test('returns a new array reference', () => {
     const input = [...transactions];
     const result = sortTransactions(input, { field: 'amount', direction: 'asc' });
     expect(result).not.toBe(input);
@@ -30,7 +30,7 @@ describe('sortTransactions — immutability', () => {
 // ─── Sort by date ─────────────────────────────────────────────────────────────
 
 describe('sortTransactions — by date ascending', () => {
-  it('orders transactions from earliest to latest', () => {
+  test('orders transactions from earliest to latest', () => {
     const result = sortTransactions(transactions, { field: 'date', direction: 'asc' });
     const dates = result.map((t) => t.date);
     for (let i = 1; i < dates.length; i++) {
@@ -38,19 +38,19 @@ describe('sortTransactions — by date ascending', () => {
     }
   });
 
-  it('first item is the earliest date', () => {
+  test('first item is the earliest date', () => {
     const result = sortTransactions(transactions, { field: 'date', direction: 'asc' });
     expect(result[0].date).toBe('2024-01-05');
   });
 
-  it('last item is the latest date', () => {
+  test('last item is the latest date', () => {
     const result = sortTransactions(transactions, { field: 'date', direction: 'asc' });
     expect(result[result.length - 1].date).toBe('2024-04-01');
   });
 });
 
 describe('sortTransactions — by date descending', () => {
-  it('orders transactions from latest to earliest', () => {
+  test('orders transactions from latest to earliest', () => {
     const result = sortTransactions(transactions, { field: 'date', direction: 'desc' });
     const dates = result.map((t) => t.date);
     for (let i = 1; i < dates.length; i++) {
@@ -58,12 +58,12 @@ describe('sortTransactions — by date descending', () => {
     }
   });
 
-  it('first item is the latest date', () => {
+  test('first item is the latest date', () => {
     const result = sortTransactions(transactions, { field: 'date', direction: 'desc' });
     expect(result[0].date).toBe('2024-04-01');
   });
 
-  it('last item is the earliest date', () => {
+  test('last item is the earliest date', () => {
     const result = sortTransactions(transactions, { field: 'date', direction: 'desc' });
     expect(result[result.length - 1].date).toBe('2024-01-05');
   });
@@ -72,7 +72,7 @@ describe('sortTransactions — by date descending', () => {
 // ─── Sort by amount ───────────────────────────────────────────────────────────
 
 describe('sortTransactions — by amount ascending', () => {
-  it('orders transactions from lowest to highest amount', () => {
+  test('orders transactions from lowest to highest amount', () => {
     const result = sortTransactions(transactions, { field: 'amount', direction: 'asc' });
     const amounts = result.map((t) => t.amount);
     for (let i = 1; i < amounts.length; i++) {
@@ -80,19 +80,19 @@ describe('sortTransactions — by amount ascending', () => {
     }
   });
 
-  it('first item has the smallest amount (most negative)', () => {
+  test('first item has the smallest amount (most negative)', () => {
     const result = sortTransactions(transactions, { field: 'amount', direction: 'asc' });
     expect(result[0].amount).toBe(-300);
   });
 
-  it('last item has the largest amount', () => {
+  test('last item has the largest amount', () => {
     const result = sortTransactions(transactions, { field: 'amount', direction: 'asc' });
     expect(result[result.length - 1].amount).toBe(1200);
   });
 });
 
 describe('sortTransactions — by amount descending', () => {
-  it('orders transactions from highest to lowest amount', () => {
+  test('orders transactions from highest to lowest amount', () => {
     const result = sortTransactions(transactions, { field: 'amount', direction: 'desc' });
     const amounts = result.map((t) => t.amount);
     for (let i = 1; i < amounts.length; i++) {
@@ -100,12 +100,12 @@ describe('sortTransactions — by amount descending', () => {
     }
   });
 
-  it('first item has the largest amount', () => {
+  test('first item has the largest amount', () => {
     const result = sortTransactions(transactions, { field: 'amount', direction: 'desc' });
     expect(result[0].amount).toBe(1200);
   });
 
-  it('last item has the smallest amount (most negative)', () => {
+  test('last item has the smallest amount (most negative)', () => {
     const result = sortTransactions(transactions, { field: 'amount', direction: 'desc' });
     expect(result[result.length - 1].amount).toBe(-300);
   });
@@ -114,7 +114,7 @@ describe('sortTransactions — by amount descending', () => {
 // ─── Sort by description ──────────────────────────────────────────────────────
 
 describe('sortTransactions — by description ascending', () => {
-  it('orders transactions alphabetically A → Z', () => {
+  test('orders transactions alphabetically A → Z', () => {
     const result = sortTransactions(transactions, { field: 'description', direction: 'asc' });
     const descs = result.map((t) => t.description);
     for (let i = 1; i < descs.length; i++) {
@@ -122,19 +122,19 @@ describe('sortTransactions — by description ascending', () => {
     }
   });
 
-  it('first item is alphabetically earliest', () => {
+  test('first item is alphabetically earliest', () => {
     const result = sortTransactions(transactions, { field: 'description', direction: 'asc' });
     expect(result[0].description).toBe('Amazon');
   });
 
-  it('last item is alphabetically latest', () => {
+  test('last item is alphabetically latest', () => {
     const result = sortTransactions(transactions, { field: 'description', direction: 'asc' });
     expect(result[result.length - 1].description).toBe('Utilities');
   });
 });
 
 describe('sortTransactions — by description descending', () => {
-  it('orders transactions alphabetically Z → A', () => {
+  test('orders transactions alphabetically Z → A', () => {
     const result = sortTransactions(transactions, { field: 'description', direction: 'desc' });
     const descs = result.map((t) => t.description);
     for (let i = 1; i < descs.length; i++) {
@@ -142,12 +142,12 @@ describe('sortTransactions — by description descending', () => {
     }
   });
 
-  it('first item is alphabetically latest', () => {
+  test('first item is alphabetically latest', () => {
     const result = sortTransactions(transactions, { field: 'description', direction: 'desc' });
     expect(result[0].description).toBe('Utilities');
   });
 
-  it('last item is alphabetically earliest', () => {
+  test('last item is alphabetically earliest', () => {
     const result = sortTransactions(transactions, { field: 'description', direction: 'desc' });
     expect(result[result.length - 1].description).toBe('Amazon');
   });
@@ -156,21 +156,21 @@ describe('sortTransactions — by description descending', () => {
 // ─── Edge cases ───────────────────────────────────────────────────────────────
 
 describe('sortTransactions — edge cases', () => {
-  it('returns an empty array when given an empty array', () => {
+  test('returns an empty array when given an empty array', () => {
     expect(sortTransactions([], { field: 'date', direction: 'asc' })).toEqual([]);
   });
 
-  it('returns a single-element array unchanged (by date)', () => {
+  test('returns a single-element array unchanged (by date)', () => {
     const single = [transactions[0]];
     const result = sortTransactions(single, { field: 'date', direction: 'asc' });
     expect(result).toHaveLength(1);
     expect(result[0]).toEqual(transactions[0]);
   });
 
-  it('handles missing description field gracefully (treated as empty string)', () => {
-    const withMissing = [
+  test('handles missing description field gracefully (treated as empty string)', () => {
+    const withMissing: Array<{ id: string; date: string; amount: number; description: string }> = [
       { id: 'a', date: '2024-01-01', amount: 10, description: 'Zebra' },
-      { id: 'b', date: '2024-01-02', amount: 20 },  // no description
+      { id: 'b', date: '2024-01-02', amount: 20, description: '' },
     ];
     const result = sortTransactions(withMissing, { field: 'description', direction: 'asc' });
     // empty string ('') sorts before 'Zebra'
@@ -178,12 +178,12 @@ describe('sortTransactions — edge cases', () => {
     expect(result[1].id).toBe('a');
   });
 
-  it('stable result length matches input length', () => {
+  test('stable result length matches input length', () => {
     const result = sortTransactions(transactions, { field: 'amount', direction: 'desc' });
     expect(result).toHaveLength(transactions.length);
   });
 
-  it('all original ids are present in the sorted result', () => {
+  test('all original ids are present in the sorted result', () => {
     const result = sortTransactions(transactions, { field: 'date', direction: 'asc' });
     const originalIds = transactions.map((t) => t.id).sort();
     const resultIds = result.map((t) => t.id).sort();
