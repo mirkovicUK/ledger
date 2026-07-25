@@ -3,15 +3,20 @@ import {
   parseDate,
   formatDate,
   isWithinRange,
+  advanceByFrequency,
   periodStart,
   periodEnd,
 } from '../src/lib/date.js';
 
-// ---------------------------------------------------------------------------
-// parseDate / formatDate roundtrip
-// ---------------------------------------------------------------------------
+type Period = 'weekly' | 'monthly' | 'yearly';
+
+interface TestCase {
+  date: string;
+  period: Period;
+}
+
 describe('periodStart and periodEnd consistency', () => {
-  const testCases = [
+  const testCases: TestCase[] = [
     { date: '2024-03-15', period: 'monthly' },
     { date: '2024-06-01', period: 'monthly' },
     { date: '2024-12-31', period: 'monthly' },
