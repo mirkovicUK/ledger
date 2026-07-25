@@ -23,19 +23,19 @@ describe('Property 8: Filter results satisfy all applied criteria', () => {
   const P8_ACCOUNT_IDS = ['acct-1', 'acct-2', 'acct-3'];
   const P8_CATEGORY_IDS = ['cat-1', 'cat-2', 'cat-3', null];
 
-  function p8RandInt(min, max) {
+  function p8RandInt(min: number, max: number): number {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
-  function p8RandFloat(min, max) {
+  function p8RandFloat(min: number, max: number): number {
     return parseFloat((Math.random() * (max - min) + min).toFixed(2));
   }
 
-  function p8Pad(n) {
+  function p8Pad(n: number): string {
     return String(n).padStart(2, '0');
   }
 
-  function p8RandomDate2024() {
+  function p8RandomDate2024(): string {
     const month = p8RandInt(1, 12);
     const day = p8RandInt(1, 28);
     return `2024-${p8Pad(month)}-${p8Pad(day)}`;
@@ -150,6 +150,3 @@ describe('Property 8: Filter results satisfy all applied criteria', () => {
 // Property 9: Sort results are correctly ordered
 // Validates: Requirements 6.2
 // ---------------------------------------------------------------------------
-
-
-```
