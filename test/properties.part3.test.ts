@@ -1,10 +1,11 @@
+import { describe, test, expect } from 'vitest';
 import { computeBudgetSpending } from '../src/lib/budget.js';
 import { periodStart, periodEnd, isWithinRange } from '../src/lib/date.js';
 import { applyFilters } from '../src/lib/filter.js';
+import type { FilterCriteria, DateRange, AmountRange } from '../src/lib/filter.js';
 import { exportToJSON, importFromJSON } from '../src/lib/storage.js';
 import { sortTransactions } from '../src/lib/sort.js';
 import { expandRule } from '../src/lib/recurring.js';
-import { describe, test, expect } from 'vitest';
 
 // ---------------------------------------------------------------------------
 // Property 3: Budget spending equals sum of matching transactions in period
@@ -21,7 +22,7 @@ describe('Property 8: Filter results satisfy all applied criteria', () => {
    */
 
   const P8_ACCOUNT_IDS = ['acct-1', 'acct-2', 'acct-3'];
-  const P8_CATEGORY_IDS = ['cat-1', 'cat-2', 'cat-3', null];
+  const P8_CATEGORY_IDS: Array<string | null> = ['cat-1', 'cat-2', 'cat-3', null];
 
   function p8RandInt(min: number, max: number): number {
     return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -53,8 +54,8 @@ describe('Property 8: Filter results satisfy all applied criteria', () => {
     }));
   }
 
-  function p8GenerateCriteria() {
-    const criteria = {
+  function p8GenerateCriteria(): FilterCriteria {
+    const criteria: FilterCriteria = {
       accountId: null,
       categoryId: null,
       dateRange: null,
@@ -70,7 +71,7 @@ describe('Property 8: Filter results satisfy all applied criteria', () => {
     if (Math.random() < 0.5) {
       const roll = Math.random();
       if (roll < 0.6) {
-        criteria.categoryId = ['cat-1', 'cat-2', 'cat-3'][p8RandInt(0, 2)];
+        criteria.categoryId = (['cat-1', 'cat-2', 'cat-3'] as string[])[p8RandInt(0, 2)];
       } else {
         criteria.categoryId = 'uncategorized';
       }
@@ -82,17 +83,19 @@ describe('Property 8: Filter results satisfy all applied criteria', () => {
       const toMonth = p8RandInt(7, 12);
       const fromDay = p8RandInt(1, 28);
       const toDay = p8RandInt(1, 28);
-      criteria.dateRange = {
+      const dateRange: DateRange = {
         from: `2024-${p8Pad(fromMonth)}-${p8Pad(fromDay)}`,
         to: `2024-${p8Pad(toMonth)}-${p8Pad(toDay)}`,
       };
+      criteria.dateRange = dateRange;
     }
 
     // amountRange: null or random min/max
     if (Math.random() < 0.5) {
       const min = p8RandFloat(-500, 250);
       const max = p8RandFloat(min, 1000);
-      criteria.amountRange = { min, max };
+      const amountRange: AmountRange = { min, max };
+      criteria.amountRange = amountRange;
     }
 
     return criteria;
@@ -118,14 +121,16 @@ describe('Property 8: Filter results satisfy all applied criteria', () => {
 
         // dateRange criterion
         if (criteria.dateRange != null) {
-          expect(t.date >= criteria.dateRange.from).toBe(true);
-          expect(t.date <= criteria.dateRange.to).toBe(true);
+          const dr = criteria.dateRange;
+          expect(t.date >= dr.from).toBe(true);
+          expect(t.date <= dr.to).toBe(true);
         }
 
         // amountRange criterion
         if (criteria.amountRange != null) {
-          expect(t.amount).toBeGreaterThanOrEqual(criteria.amountRange.min);
-          expect(t.amount).toBeLessThanOrEqual(criteria.amountRange.max);
+          const ar = criteria.amountRange;
+          expect(t.amount).toBeGreaterThanOrEqual(ar.min);
+          expect(t.amount).toBeLessThanOrEqual(ar.max);
         }
       }
     }
@@ -134,7 +139,7 @@ describe('Property 8: Filter results satisfy all applied criteria', () => {
   test('null criteria returns all transactions unchanged across 100 random cases', () => {
     for (let iteration = 0; iteration < 100; iteration++) {
       const transactions = p8GenerateTransactions();
-      const nullCriteria = {
+      const nullCriteria: FilterCriteria = {
         accountId: null,
         categoryId: null,
         dateRange: null,
