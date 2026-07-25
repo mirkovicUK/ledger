@@ -40,7 +40,7 @@ describe('periodStart', () => {
   });
 
   test('throws for unknown period', () => {
-    expect(() => periodStart(refDate, 'quarterly')).toThrow(/unknown period/i);
+    expect(() => periodStart(refDate, 'quarterly' as any)).toThrow(/unknown period/i);
   });
 });
 
