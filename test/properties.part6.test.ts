@@ -1,11 +1,12 @@
+import { describe, test, expect } from 'vitest';
 import { computeBudgetSpending } from '../src/lib/budget.js';
 import { periodStart, periodEnd, isWithinRange } from '../src/lib/date.js';
 import { applyFilters } from '../src/lib/filter.js';
 import { exportToJSON, importFromJSON } from '../src/lib/storage.js';
 import { sortTransactions } from '../src/lib/sort.js';
 import { expandRule } from '../src/lib/recurring.js';
-import { describe, test, expect } from 'vitest';
-import { ledgerReducer, INITIAL_STATE } from '../src/lib/ledgerReducer.js';
+import { INITIAL_STATE, ledgerReducer } from '../src/lib/ledgerReducer.js';
+import type { AppState } from '../src/lib/types.js';
 
 // ---------------------------------------------------------------------------
 // Property 3: Budget spending equals sum of matching transactions in period
@@ -40,16 +41,16 @@ describe('Property 12: Referential integrity — transactions with non-existent 
   function p12RandomDate(rng: () => number) {
     const month = Math.floor(rng() * 12) + 1;
     const day = Math.floor(rng() * 28) + 1;
-    return `2024-${p12Pad(month)}-${p12Pad(day)}`;
+    return '2024-' + p12Pad(month) + '-' + p12Pad(day);
   }
 
   /** Generate a valid transaction payload but with a guaranteed non-existent accountId */
-  function p12TransactionPayload(rng: () => number, nonExistentId: string, overrides: Record<string, any> = {}) {
+  function p12TransactionPayload(rng: () => number, nonExistentId: string, overrides: Record<string, unknown> = {}) {
     return {
       accountId: nonExistentId,
       amount: parseFloat((rng() * 2000 - 500).toFixed(2)),
       date: p12RandomDate(rng),
-      description: `tx-p12-${Math.floor(rng() * 1e6)}`,
+      description: 'tx-p12-' + Math.floor(rng() * 1e6),
       categoryId: null,
       ...overrides,
     };
@@ -60,7 +61,7 @@ describe('Property 12: Referential integrity — transactions with non-existent 
       const rng = makePrng(i * 6271 + 13);
 
       // INITIAL_STATE has no accounts — any accountId is non-existent
-      const nonExistentId = `ghost-acc-${i}-${Math.floor(rng() * 1e9)}`;
+      const nonExistentId = 'ghost-acc-' + i + '-' + Math.floor(rng() * 1e9);
       const state = INITIAL_STATE;
 
       const nextState = ledgerReducer(state, {
@@ -74,7 +75,7 @@ describe('Property 12: Referential integrity — transactions with non-existent 
   });
 
   test('EDIT_TRANSACTION with non-existent accountId in a state with accounts returns same reference (100 iterations)', () => {
-    const ACCOUNT_TYPES = ['checking', 'savings', 'credit', 'cash', 'investment'];
+    const ACCOUNT_TYPES: Array<'checking' | 'savings' | 'credit' | 'cash' | 'investment'> = ['checking', 'savings', 'credit', 'cash', 'investment'];
 
     for (let i = 0; i < 100; i++) {
       const rng = makePrng(i * 9431 + 77);
@@ -82,8 +83,8 @@ describe('Property 12: Referential integrity — transactions with non-existent 
       // Build a state with 1–3 real accounts
       const accountCount = Math.floor(rng() * 3) + 1;
       const accounts = Array.from({ length: accountCount }, (_, k) => ({
-        id: `acc-p12-${i}-${k}`,
-        name: `Account ${k}`,
+        id: 'acc-p12-' + i + '-' + k,
+        name: 'Account ' + k,
         type: ACCOUNT_TYPES[Math.floor(rng() * ACCOUNT_TYPES.length)],
         createdAt: new Date().toISOString(),
       }));
@@ -91,7 +92,7 @@ describe('Property 12: Referential integrity — transactions with non-existent 
       // Add a real transaction so EDIT_TRANSACTION has something to match id-wise
       const realAccountId = accounts[0].id;
       const existingTransaction = {
-        id: `txn-p12-${i}`,
+        id: 'txn-p12-' + i,
         accountId: realAccountId,
         amount: 100,
         date: '2024-03-01',
@@ -101,14 +102,14 @@ describe('Property 12: Referential integrity — transactions with non-existent 
         createdAt: new Date().toISOString(),
       };
 
-      const state = {
+      const state: AppState = {
         ...INITIAL_STATE,
         accounts,
         transactions: [existingTransaction],
       };
 
       // accountId that definitely does NOT exist in state.accounts
-      const nonExistentId = `ghost-acc-edit-${i}-${Math.floor(rng() * 1e9)}`;
+      const nonExistentId = 'ghost-acc-edit-' + i + '-' + Math.floor(rng() * 1e9);
 
       // Provide all required fields for TransactionSchema but with bad accountId
       const payload = {
@@ -116,7 +117,7 @@ describe('Property 12: Referential integrity — transactions with non-existent 
         accountId: nonExistentId,
         amount: parseFloat((rng() * 2000 - 500).toFixed(2)),
         date: p12RandomDate(rng),
-        description: `edited-p12-${i}`,
+        description: 'edited-p12-' + i,
         categoryId: null,
         recurringRuleId: null,
         createdAt: existingTransaction.createdAt,
@@ -137,6 +138,3 @@ describe('Property 12: Referential integrity — transactions with non-existent 
 // Property 6: Recurring rule expansion is idempotent
 // Validates: Requirements 5.3
 // ---------------------------------------------------------------------------
-
-
-```
