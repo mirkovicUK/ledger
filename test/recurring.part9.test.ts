@@ -1,15 +1,16 @@
-import { describe, it, expect } from 'vitest';
+import { describe, test, expect } from 'vitest';
 import { expandRule, expandAllRules } from '../src/lib/recurring.js';
+import type { RecurringRule } from '../src/lib/types.js';
 
 // Simple deterministic ID generator for tests
 let idCounter = 0;
-export function makeIdGen() {
+function makeIdGen() {
   idCounter = 0;
   return () => `tx-${++idCounter}`;
 }
 
 // Baseline rule factory
-export function makeRule(overrides = {}) {
+function makeRule(overrides: Partial<RecurringRule> = {}): RecurringRule {
   return {
     id: 'rule-1',
     accountId: 'acct-1',
@@ -26,7 +27,7 @@ export function makeRule(overrides = {}) {
 // ─── expandRule – correct dates per frequency ──────────────────────────────
 
 describe('expandRule – expansion from lastExpandedDate', () => {
-  it('starts from the day AFTER lastExpandedDate, not from startDate', () => {
+  test('starts from the day AFTER lastExpandedDate, not from startDate', () => {
     const rule = makeRule({
       frequency: 'monthly',
       startDate: '2024-01-01',
@@ -38,7 +39,7 @@ describe('expandRule – expansion from lastExpandedDate', () => {
     expect(transactions.map((t) => t.date)).toEqual(['2024-03-01', '2024-04-01']);
   });
 
-  it('with lastExpandedDate null, starts from startDate', () => {
+  test('with lastExpandedDate null, starts from startDate', () => {
     const rule = makeRule({
       frequency: 'monthly',
       startDate: '2024-06-01',
@@ -49,7 +50,7 @@ describe('expandRule – expansion from lastExpandedDate', () => {
     expect(transactions[0].date).toBe('2024-06-01');
   });
 
-  it('with daily rule, advances exactly one day past lastExpandedDate', () => {
+  test('with daily rule, advances exactly one day past lastExpandedDate', () => {
     const rule = makeRule({
       frequency: 'daily',
       startDate: '2024-01-01',
@@ -64,7 +65,7 @@ describe('expandRule – expansion from lastExpandedDate', () => {
     ]);
   });
 
-  it('generates nothing when lastExpandedDate already equals referenceDate', () => {
+  test('generates nothing when lastExpandedDate already equals referenceDate', () => {
     const rule = makeRule({
       frequency: 'monthly',
       startDate: '2024-01-01',
